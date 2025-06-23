@@ -1,0 +1,1013 @@
+﻿using GameNetcodeStuff;
+using LethalBots.AI.AIStates;
+using LethalBots.Enums;
+using LethalBots.Managers;
+using LethalBots.Patches.EnemiesPatches;
+using System;
+using System.Collections;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.UI;
+
+namespace LethalBots.AI
+{
+    /// <summary>
+    /// Abstract state main class for the <c>AIState</c>
+    /// </summary>
+    public abstract class AIState
+    {
+        protected LethalBotAI ai;
+
+        protected AIState? previousAIState;
+        public EnumAIStates? previousState { protected set; get; }
+
+        private EnumAIStates currentState;
+        protected EnumAIStates CurrentState
+        {
+            get
+            {
+                return this.currentState;
+            }
+            set
+            {
+                this.currentState = value;
+                Plugin.LogDebug($"Bot {npcController.Npc.playerClientId} ({npcController.Npc.playerUsername}) new state :                 {this.currentState}");
+            }
+        }
+
+        /// <summary>
+        /// <c>NpcController</c> from the <c>LethalBotAI</c>
+        /// </summary>
+        protected NpcController npcController;
+        protected AISearchRoutine searchForPlayers;
+        protected AISearchRoutine searchForScrap;
+
+        protected Vector3? targetLastKnownPosition;
+        public GrabbableObject? TargetItem
+        {
+            protected set;
+            get;
+        }
+
+        protected Coroutine? panikCoroutine;
+        protected Coroutine? safePathCoroutine;
+        protected EnemyAI? currentEnemy;
+        protected Vector3 safePathPos; // The closest point to targetShipPos that is safe
+        protected CancellationTokenSource? pathfindCancellationToken = null; // For use in the async danger pathfinder
+        protected EntranceTeleport? targetEntrance = null;
+        protected bool hasBeenStarted = false;
+        private GameObject? lastStuckNode;
+
+        /// <summary>
+        /// Constructor from another state
+        /// </summary>
+        /// <param name="oldState"></param>
+        protected AIState(AIState oldState) : this(oldState.ai)
+        {
+            this.previousAIState = oldState;
+            this.previousState = oldState.GetAIState();
+            this.targetLastKnownPosition = oldState.targetLastKnownPosition;
+            this.TargetItem = oldState.TargetItem;
+
+            this.panikCoroutine = oldState.panikCoroutine;
+            this.currentEnemy = oldState.currentEnemy;
+
+            this.searchForPlayers = oldState.searchForPlayers;
+            this.searchForScrap = oldState.searchForScrap;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="ai"></param>
+        /// <exception cref="System.NullReferenceException"><c>LethalBotAI</c> null in parameters</exception>
+        protected AIState(LethalBotAI ai)
+        {
+            if (ai == null)
+            {
+                throw new System.NullReferenceException("Enemy AI is null.");
+            }
+
+            this.ai = ai;
+
+            this.npcController = ai.NpcController;
+
+            // Mark our current position as "safe"
+            // We will adjust our safe pos later as required
+            this.safePathPos = this.npcController.Npc.transform.position;
+
+            if (this.searchForPlayers == null)
+            {
+                this.searchForPlayers = new AISearchRoutine();
+                this.searchForPlayers.randomized = true;
+            }
+            if (this.searchForScrap == null)
+            {
+                this.searchForScrap = new AISearchRoutine();
+                this.searchForScrap.randomized = true;
+            }
+        }
+
+        // Create a destructor here to destory the token incase we somehow get removed or something
+        // without calling the CancelAsyncPathfindToken function
+        ~AIState()
+        {
+            CancelAsyncPathfindToken();
+        }
+
+        /// <summary>
+        /// Executes when the bot enters this state!
+        /// </summary>
+        /// <remarks>
+        /// By default, this is called when <see cref="LethalBotAI.State"/> is set to this state.<br/>
+        /// You should use this to initialize variables, set up the bot, etc.<br/>
+        /// You can use <see cref="hasBeenStarted"/> to check if this state has been started before.<br/>
+        /// </remarks>
+        public virtual void OnEnterState()
+        {
+            hasBeenStarted = true;
+        }
+
+        /// <summary>
+        /// Apply the behaviour according to the type of state <see cref="Enums.EnumAIStates"><c>Enums.EnumAIStates</c></see>.<br/>
+        /// </summary>
+        public abstract void DoAI();
+
+        public abstract void TryPlayCurrentStateVoiceAudio();
+
+        public virtual void PlayerHeard(Vector3 noisePosition) { }
+
+        [Obsolete("Broken on purpose! This function is never called and will never be fixed since you can't tell who created a sound!")]
+        public virtual void EnemyHeard(Vector3 noisePosition) { }
+
+        /// <summary>
+        /// Called when the bot is stuck and can't move!<br/>
+        /// </summary>
+        public virtual void OnBotStuck() 
+        {
+            Transform? closestNode = GetClosestNode(npcController.Npc.transform.position, lastStuckNode);
+            lastStuckNode = closestNode?.gameObject;
+            if (closestNode != null)
+            {
+                ai.SyncTeleportLethalBot(closestNode.position);
+            }
+        }
+
+        /// <summary>
+        /// Helper function that is similar to <see cref="RoundManager.GetClosestNode(Vector3, bool)"/>,
+        /// but adjusted for bot use!
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        private Transform? GetClosestNode(Vector3 pos, GameObject? ignoreNode = null)
+        {
+            GameObject[] array;
+            if (ai.isOutside)
+            {
+                if (RoundManager.Instance.outsideAINodes == null)
+                {
+                    RoundManager.Instance.outsideAINodes = GameObject.FindGameObjectsWithTag("OutsideAINode");
+                }
+
+                array = RoundManager.Instance.outsideAINodes;
+            }
+            else
+            {
+                if (RoundManager.Instance.insideAINodes == null)
+                {
+                    RoundManager.Instance.insideAINodes = GameObject.FindGameObjectsWithTag("AINode");
+                }
+
+                array = RoundManager.Instance.insideAINodes;
+            }
+
+            float num = 99999f;
+            GameObject? closestNode = null;
+            foreach (GameObject node in array)
+            {
+                float sqrMagnitude = (node.transform.position - pos).sqrMagnitude;
+                if (sqrMagnitude < num && ignoreNode != node)
+                {
+                    num = sqrMagnitude;
+                    closestNode = node;
+                }
+            }
+
+            return closestNode?.transform;
+        }
+
+        /// <summary>
+        /// Called when the bot recevies a message from the signal translator!
+        /// </summary>
+        /// <remarks>
+        /// WARNING: All messages are forced into lower case!
+        /// </remarks>
+        /// <param name="message"></param>
+        public virtual void OnSignalTranslatorMessageReceived(string message)
+        {
+            if (message == "return")
+            {
+                ai.State = new ReturnToShipState(this);
+            }
+            else if (message == "jester")
+            {
+                if (ai.isOutside)
+                {
+                    return;
+                }
+                EnemyAI? enemyAI = FindNearbyJester();
+                if (enemyAI == null)
+                {
+                    return;
+                }
+                ai.State = new PanikState(this, enemyAI);
+            }
+        }
+
+        /// <summary>
+        /// Called when the bot recevies a chat message. This can be from a player or bot!
+        /// You can use <see cref="Managers.LethalBotManager.IsPlayerLethalBot(PlayerControllerB)"/> to check who is a bot or not!
+        /// </summary>
+        /// <remarks>
+        /// WARNING: All messages are forced into lower case!
+        /// </remarks>
+        /// <param name="message"></param>
+        /// <param name="playerWhoSentMessage"></param>
+        public virtual void OnPlayerChatMessageRecevied(string message, PlayerControllerB playerWhoSentMessage) 
+        {
+            if (message.Contains("jester"))
+            {
+                if (ai.isOutside)
+                {
+                    return;
+                }
+                EnemyAI? enemyAI = FindNearbyJester();
+                if (enemyAI == null)
+                {
+                    return;
+                }
+                ai.State = new PanikState(this, enemyAI);
+            }
+        }
+
+        /// <summary>
+        /// A bool the represents if we should crouch or not
+        /// </summary>
+        /// <returns>true: if we should crouch. false: if we should stand. null: if no preference</returns>
+        public virtual bool? ShouldBotCrouch()
+        {
+            // Try not to crouch if we are under water!
+            // We could down if we do!
+            if (npcController.Npc.isUnderwater)
+            {
+                return false;
+            }
+            // By default, if there is an eyeless dog nearby, we should crouch!
+            else if (ai.CheckProximityForEyelessDogs())
+            {
+                return true;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Find an entrance we can path to so we can enter or exit the main building!
+        /// </summary>
+        /// <remarks>
+        /// We check if the bot can path to it since if the bot can't we could go into an infinite loop!
+        /// We also have to check if the exit position lets the bot reach the ship. Offence is a good example where the bots can't path down the fire exit!
+        /// </remarks>
+        /// <returns>The closest entrance or else null</returns>
+        protected virtual EntranceTeleport? FindClosestEntrance(Vector3? shipPos = null, EntranceTeleport? entranceToAvoid = null)
+        {
+            bool shouldOnlyUseFrontEntrance = ShouldOnlyUseFrontEntrance();
+            bool isClosestEntranceFront = false;
+            EntranceTeleport? closestEntrance = null;
+            float closestEntranceDist = float.MaxValue;
+            shipPos ??= RoundManager.Instance.GetNavMeshPosition(StartOfRound.Instance.middleOfShipNode.position);
+            foreach (var entrance in ai.EntrancesTeleportArray)
+            {
+                // If we are avoiding a specific entrance, we should skip it!
+                if (entranceToAvoid != null && entranceToAvoid == entrance)
+                {
+                    continue;
+                }
+
+                if (ai.isOutside && entrance.isEntranceToBuilding)
+                {
+                    // If we are outside, we should only use the front entrance if needed!
+                    bool isCurrentEntranceFront = IsFrontEntrance(entrance);
+                    if (shouldOnlyUseFrontEntrance
+                    && isClosestEntranceFront
+                    && !isCurrentEntranceFront)
+                    {
+                        break;
+                    }
+
+                    // NOTE: We don't need to check if the entrance can reach the ship as we will check that on the return trip
+                    // If we are outside, we should consider if we should only use the front entrance or not!
+                    //float entranceDistSqr = (entrance.entrancePoint.position - npcController.Npc.transform.position).sqrMagnitude;
+                    if (entrance.FindExitPoint()
+                        && !IsEntranceCoveredInQuickSand(entrance)
+                        && CanPathToEntrance(entrance, true))
+                    {
+                        // If we are not using the front entrance,
+                        // we can use any entrance that is not the front entrance
+                        if ((shouldOnlyUseFrontEntrance
+                                && !isClosestEntranceFront
+                                && isCurrentEntranceFront)
+                            || ai.pathDistance < closestEntranceDist)
+                        {
+                            closestEntrance = entrance;
+                            closestEntranceDist = ai.pathDistance;
+                            isClosestEntranceFront = isCurrentEntranceFront;
+                        }
+                    }
+                }
+                else if (!ai.isOutside && !entrance.isEntranceToBuilding)
+                {
+                    // NOTE: We use exit point here or the pathfind would always fail since the entrance we are using is inside the facility!
+                    // If we are inside, we don't care about the front entrance, we just want to find the closest entrance that we can path to!
+                    //float entranceDistSqr = (entrance.entrancePoint.position - npcController.Npc.transform.position).sqrMagnitude;
+                    if (entrance.FindExitPoint()
+                        && !IsEntranceCoveredInQuickSand(entrance)
+                        && LethalBotAI.IsValidPathToTarget(RoundManager.Instance.GetNavMeshPosition(entrance.exitPoint.position), shipPos.Value, ai.agent.areaMask, ref ai.path1)
+                        && CanPathToEntrance(entrance, true) 
+                        && ai.pathDistance < closestEntranceDist)
+                    {
+                        closestEntrance = entrance;
+                        closestEntranceDist = ai.pathDistance;
+                    }
+                }
+            }
+            return closestEntrance;
+        }
+
+        /// <summary>
+        /// Checks if the given entrance is a front entrance!
+        /// </summary>
+        /// <param name="entrance"></param>
+        /// <returns>true: <paramref name="entrance"/> is the front entrance. false: <paramref name="entrance"/> is not the front entrance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected bool IsFrontEntrance(EntranceTeleport? entrance)
+        {
+            return entrance != null && entrance.entranceId == 0;
+        }
+
+        /// <summary>
+        /// Checks if the entrance is covered in quicksand
+        /// </summary>
+        /// <param name="entrance"></param>
+        /// <returns></returns>
+        protected bool IsEntranceCoveredInQuickSand(EntranceTeleport? entrance)
+        {
+            // Check to make sure that the quicksand array is not null or empty
+            if (ai.QuicksandArray == null || ai.QuicksandArray.Length == 0)
+            {
+                return false;
+            }
+
+            // Check if the entrance is covered in quicksand
+            RoundManager instanceRM = RoundManager.Instance;
+            float headOffset = npcController.Npc.gameplayCamera.transform.position.y - npcController.Npc.transform.position.y;
+            if (entrance != null)
+            {
+                Vector3 entrancePos = instanceRM.GetNavMeshPosition(entrance.isEntranceToBuilding ? entrance.entrancePoint.position : entrance.exitPoint.position, instanceRM.navHit, 2.7f, ai.agent.areaMask);
+                Transform closestNode = instanceRM.GetClosestNode(entrancePos, true);
+                Vector3 closestNodePos = instanceRM.GetNavMeshPosition(closestNode.position, instanceRM.navHit, 2.7f, ai.agent.areaMask);
+                float quicksandBuffer = 2f;
+                Plugin.LogDebug($"Testing quicksand safety for exit {entrance}");
+                foreach (var quicksand in ai.QuicksandArray)
+                {
+                    if (!quicksand.isActiveAndEnabled)
+                        continue;
+
+                    Collider? collider = quicksand.gameObject.GetComponent<Collider>();
+                    if (collider == null)
+                        continue;
+
+                    if (!quicksand.isWater)
+                    {
+                        Plugin.LogDebug("This is quicksand!");
+
+                        // Check if the closest point is within or on the collider
+                        Vector3 testPoint = Physics.ClosestPoint(entrancePos, collider, collider.transform.position, collider.transform.rotation);
+                        if ((testPoint - entrancePos).sqrMagnitude < quicksandBuffer * quicksandBuffer)
+                        {
+                            Plugin.LogDebug("Segment intersects solid quicksand!");
+                            return true;
+                        }
+                        /*float dangerRange = 2f;
+                        Collider[] hitColliders = Physics.OverlapSphere(closestPoint, dangerRange);
+                        foreach (var hitCollider in hitColliders)
+                        {
+                            if (hitCollider == collider)
+                            {
+                                Plugin.LogDebug("Segment intersects solid quicksand!");
+                                return true;
+                            }
+                        }*/
+                    }
+                    else
+                    {
+                        Plugin.LogDebug("This is water!");
+
+                        // For some reason this works really well like this unlike the code above
+                        Vector3 simulatedHead = entrancePos + Vector3.up * headOffset;
+                        if (collider.bounds.Contains(simulatedHead))
+                        {
+                            // We might be able to walk through the water, lets check the closest node to the entrance
+                            // FIXME: This isn't the best way to do this, but it works for now
+                            // We should probably get the closest node that is not in the water and check that instead
+                            simulatedHead = closestNodePos + Vector3.up * headOffset;
+                            if (collider.bounds.Contains(simulatedHead))
+                            {
+                                Plugin.LogDebug("Simulated head intersects water!");
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Helper function that checks if we can path to the main entrance!
+        /// </summary>
+        /// <param name="targetEntrance">The entrance to check</param>
+        /// <param name="calculatePathDistance">Should we calculate the length of the path?</param>
+        /// <returns>true: the bot can path to the entrance. false: the bot can't find a path to the entrance.</returns>
+        protected bool CanPathToEntrance(EntranceTeleport targetEntrance, bool calculatePathDistance = false)
+        {
+            // Check if we can path to the entrance!
+            if (!ai.IsValidPathToTarget(targetEntrance.entrancePoint.position, calculatePathDistance))
+            {
+                // Check if this is the front entrance if we need to use an elevator
+                if (!targetEntrance.isEntranceToBuilding && IsFrontEntrance(targetEntrance) && ai.ElevatorScript != null)
+                {
+                    // Check if we can path to the bottom of the elevator
+                    if (ai.IsValidPathToTarget(ai.ElevatorScript.elevatorBottomPoint.position, calculatePathDistance))
+                    {
+                        return true;
+                    }
+
+                    // Check if we are inside the elevator!
+                    return ai.IsInsideElevator;
+                }
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Determines whether the front entrance should be exclusively used.
+        /// </summary>
+        /// <remarks>
+        /// Bots will only use the front entrance when we start the round, but are free to use others as the day progresses!
+        /// </remarks>
+        /// <returns><see langword="true"/> if only the front entrance should be used; otherwise, <see langword="false"/>.</returns>
+        protected virtual bool ShouldOnlyUseFrontEntrance()
+        {
+            // Took this from the TimeOfDay class file,
+            // if we just started the day we should use the front entrance!
+            TimeOfDay timeOfDay = TimeOfDay.Instance;
+            if (timeOfDay != null)
+            {
+                DayMode dayMode = timeOfDay.GetDayPhase(timeOfDay.currentDayTime / timeOfDay.totalTime);
+                if (dayMode == DayMode.Dawn)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns if the bot should return to the ship!
+        /// </summary>
+        /// <remarks>
+        /// This function is was made virtual since this may be different for each state!
+        /// </remarks>
+        /// <returns>true if we should return and false if we don't need to</returns>
+        public virtual bool ShouldReturnToShip()
+        {
+            // Facility Meltdown Support!
+            if (Plugin.IsModFacilityMeltdownLoaded)
+            {
+                // The Meltdown has been started, RUN!
+                if (HasMeltdownStarted())
+                {
+                    return true;
+                }
+            }
+
+            // Took this from the TimeOfDay class file,
+            // if its getting late out, we should return to the ship!
+            TimeOfDay timeOfDay = TimeOfDay.Instance;
+            if (timeOfDay != null)
+            {
+                // TODO: Change this to be better with longer day mods.
+                // I mean it works partially, but could be better!
+                DayMode dayMode = timeOfDay.GetDayPhase(timeOfDay.currentDayTime / timeOfDay.totalTime);
+                if ((dayMode == DayMode.Sundown || dayMode == DayMode.Midnight)
+                    || timeOfDay.votesForShipToLeaveEarly >= LethalBotManager.Instance.AllRealPlayersCount 
+                    || timeOfDay.shipLeavingAlertCalled)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Helper function to check if the facility meltdown has started
+        /// </summary>
+        /// <remarks>
+        /// This only exists since the game will error out if Facility meltdown isn't installed and
+        /// its class related stuff exists in a function!
+        /// </remarks>
+        /// <returns>true: the meltdown has started. false: the meltdown hasn't started yet</returns>
+        protected bool HasMeltdownStarted()
+        {
+            // Facility Meltdown Support!
+            if (Plugin.IsModFacilityMeltdownLoaded)
+            {
+                // The Meltdown has been started, RUN!
+                if (FacilityMeltdown.API.MeltdownAPI.MeltdownStarted)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Called every ai interval <see cref="EnemyAI.AIIntervalTime"/> in <see cref="LethalBotAI.DoAIInterval"/> by default. The bot will use the held item if it can!
+        /// </summary>
+        /// <remarks>
+        /// There is only AI for four items at the time; The walkie-talkie, the shotgun, TZPInhalant, and the Maneater baby!<br/>
+        /// The walkie-talkie will be used if the bot is talking!<br/>
+        /// The shotgun will be used if the safety is not on or the bot has spare ammo and the shotgun needs to be reloaded!<br/>
+        /// The TZPInhalant is managed by the <see cref="UseTZPInhalantState"/> state!<br/>
+        /// The Maneater baby will be rocked if the baby is crying!<br/>
+        /// NOTE: The bot only uses <see cref="LethalBotAI.HeldItem"/>, so items in the inventory will not be used!<br/>
+        /// This will be changed in the future!
+        /// </remarks>
+        public virtual void UseHeldItem()
+        {
+            GrabbableObject? heldItem = ai.HeldItem;
+            if (heldItem == null 
+                || !ai.CanUseHeldItem())
+            {
+                return;
+            }
+
+            // If we are holding a walkie-talkie, we should use it!
+            // NOTE: Due to the way the walkie-talkie is coded, this seems to work really well!
+            if (heldItem is WalkieTalkie walkieTalkie)
+            {
+                if (ai.LethalBotIdentity.Voice.IsTalking())
+                {
+                    if (!walkieTalkie.isBeingUsed && !walkieTalkie.insertedBattery.empty)
+                    {
+                        walkieTalkie.ItemInteractLeftRightOnClient(false);
+                    }
+                    else if (walkieTalkie.isBeingUsed && !walkieTalkie.isHoldingButton)
+                    {
+                        walkieTalkie.UseItemOnClient(true);
+                    }
+                }
+                else if (walkieTalkie.isBeingUsed && walkieTalkie.isHoldingButton)
+                {
+                    walkieTalkie.UseItemOnClient(false);
+                }
+            }
+            else if (heldItem is ShotgunItem shotgun)
+            {
+                // Put the saftey back on
+                if (!shotgun.safetyOn)
+                {
+                    shotgun.ItemInteractLeftRightOnClient(false);
+                }
+                // Reload as needed!
+                else if (shotgun.shellsLoaded < 2 && ai.HasAmmoForWeapon(shotgun, true))
+                {
+                    shotgun.ItemInteractLeftRightOnClient(true);
+                }
+            }
+            else if (heldItem is TetraChemicalItem tzpItem)
+            {
+                // Stop using if we are using it!
+                if (tzpItem.isBeingUsed)
+                { 
+                    tzpItem.UseItemOnClient(false);
+                }
+            }
+            else if (heldItem is CaveDwellerPhysicsProp caveDwellerGrabbableObject)
+            {
+                CaveDwellerAI? caveDwellerAI = caveDwellerGrabbableObject.caveDwellerScript;
+                if (caveDwellerAI != null)
+                {
+                    // Rock the maneater if its crying and we are holding it!
+                    if (caveDwellerAI.babyCrying)
+                    {
+                        // Don't rock the baby if we are already rocking it!
+                        if (caveDwellerAI.rockingBaby <= 0)
+                        {
+                            caveDwellerGrabbableObject.UseItemOnClient(true);
+                        }
+                    }
+                    // If the baby is not crying, we should stop rocking it!
+                    else
+                    {
+                        // Stop rocking the maneater if its not crying anymore!
+                        if (caveDwellerAI.rockingBaby > 0)
+                        {
+                            caveDwellerGrabbableObject.UseItemOnClient(false);
+                        }
+                        else
+                        {
+                            // Check if the baby doesn't like us, if it doesn't, we should drop it!
+                            // We also check if the config option is enabled or not!
+                            BabyPlayerMemory playerMemory = CaveDwellerAIPatch.GetBabyMemoryOfPlayer_ReversePatch(caveDwellerAI, npcController.Npc);
+                            if ((playerMemory != null && playerMemory.likeMeter < 0.1f) 
+                                || !Plugin.Config.AdvancedManeaterBabyAI.Value)
+                            {
+                                // The baby doesn't like us, so we should drop it!
+                                // or else it will be mad at us after a while and would try to kill us!
+                                ai.DropItem();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Used to stop all coroutines in a state!<br/>
+        /// Called when a bot switches states!
+        /// </summary>
+        public virtual void StopAllCoroutines()
+        {
+            if (searchForPlayers.inProgress)
+            {
+                ai.StopSearch(searchForPlayers, true);
+            }
+            if (searchForScrap.inProgress)
+            {
+                ai.StopSearch(searchForScrap, false);
+            }
+            StopSafePathCoroutine();
+        }
+
+        /// <summary>
+        /// Finds the closest AINode to given position that is safe.
+        /// Changes <see cref="safePathPos"/> to the safe position found
+        /// </summary>
+        /// <remarks>
+        /// This will also call <see cref="LethalBotAI.SetDestinationToPositionLethalBotAI(Vector3)"/>
+        /// upon finding a safe position!
+        /// </remarks>
+        /// <returns></returns>
+        private IEnumerator findSafePathToTarget()
+        {
+            while (ai.State != null)
+            {
+                yield return null;
+
+                // Grab the desired position we want to make a safe path to!
+                Vector3? targetDestination = GetDesiredSafePathPosition();
+                if (!targetDestination.HasValue)
+                {
+                    StopSafePathCoroutine();
+                    yield break; // End the loop, we have no set destination!
+                }
+
+                // If the direct path safe?
+                CancelAsyncPathfindToken(); // Clear the old token
+                pathfindCancellationToken = new CancellationTokenSource();
+                Task<(bool isDangerous, float pathDistance)> pathfindTask = ai.TryStartPathDangerousAsync(targetDestination.Value, token: pathfindCancellationToken.Token);
+                yield return new WaitUntil(() => pathfindTask.IsCompleted);
+
+                // Check if an error occured!
+                if (pathfindTask.IsFaulted)
+                {
+                    Plugin.LogError($"Async pathfinder had an exception: {pathfindTask.Exception}");
+                    StopSafePathCoroutine();
+                    yield break; // Kill the coroutine! Should we do this? Could I just let the rest of the coroutine run?
+                }
+                else if (pathfindTask.IsCanceled)
+                {
+                    Plugin.LogWarning($"Async pathfinder was canceled early!");
+                }
+                else if (!pathfindTask.Result.isDangerous
+                    || ShouldIgnoreInitialDangerCheck())
+                {
+                    safePathPos = targetDestination.Value;
+                    ai.SetDestinationToPositionLethalBotAI(safePathPos);
+                    yield return new WaitForSeconds(ai.AIIntervalTime);
+                    continue;
+                }
+
+                // FIXME: This relies on Elucian Distance rather than travel distance, this should be fixed!
+                var nodes = ai.allAINodes.OrderBy(node => (node.transform.position - targetDestination.Value).sqrMagnitude)
+                                         .ToArray();
+                yield return null;
+
+                // no need for a loop I guess
+                bool foundSafePath = false;
+                for (var i = 0; i < nodes.Length; i++)
+                {
+                    Transform nodeTransform = nodes[i].transform;
+
+                    // Give the main thread a chance to do something else
+                    // We still need the yield return null here!
+                    // As if the pathfind fails, we need to wait a frame!
+                    // Due to the way the async pathfinder works, we may not have to yield 
+                    // here as often, but it should still be done to prevent freezing
+                    if (i % 15 == 0)
+                    {
+                        yield return null;
+                    }
+
+                    // Can we path to the node and is it safe?
+                    CancelAsyncPathfindToken(); // Clear the old token
+                    pathfindCancellationToken = new CancellationTokenSource();
+                    pathfindTask = ai.TryStartPathDangerousAsync(nodeTransform.position, token: pathfindCancellationToken.Token);
+                    yield return new WaitUntil(() => pathfindTask.IsCompleted);
+
+                    // Check if an error occured!
+                    if (pathfindTask.IsFaulted)
+                    {
+                        Plugin.LogError($"Async pathfinder had an exception: {pathfindTask.Exception}");
+                        StopSafePathCoroutine();
+                        yield break; // Kill the coroutine!
+                    }
+                    else if (pathfindTask.IsCanceled)
+                    {
+                        Plugin.LogWarning($"Async pathfinder was canceled early, skipping node!");
+                        continue;
+                    }
+                    // Did the task say the path was dangerous?
+                    else if (pathfindTask.Result.isDangerous)
+                    {
+                        continue;
+                    }
+
+                    safePathPos = nodeTransform.position;
+                    foundSafePath = true;
+                    break;
+                }
+
+                // If we found a safe path, we should wait a bit before checking again!
+                // We don't need to do the more lax checks!
+                if (foundSafePath)
+                {
+                    ai.SetDestinationToPositionLethalBotAI(safePathPos);
+                    yield return new WaitForSeconds(ai.AIIntervalTime);
+                    continue;
+                }
+
+                // We failed while using eye position, lets make the checks a bit more lax!
+                if (ai.AreWeExposed())
+                {
+                    Plugin.LogDebug($"Bot {npcController.Npc.playerUsername} failed to find a node out of sight and is exposed! They will now attempt to fallback into cover if possible!");
+
+                    // We are exposed, we should try to find a safe path again!
+                    // FIXME: This relies on Elucian Distance rather than travel distance, this should be fixed!
+                    // FIXME: This is also a lot slower, since we iterated through the list twice.....
+                    // We should pick the node closest to us at this point!
+                    nodes = ai.allAINodes.OrderBy(node => (node.transform.position - npcController.Npc.transform.position).sqrMagnitude)
+                                             .ToArray();
+                    yield return null;
+
+                    // We are still exposed, find cover now!
+                    // NEEDTOVALIDATE: Should this be the local vector instead of just the height?
+                    Vector3 ourPos = npcController.Npc.transform.position;
+                    float headOffset = npcController.Npc.gameplayCamera.transform.position.y - ourPos.y;
+                    for (var i = 0; i < nodes.Length; i++)
+                    {
+                        Transform nodeTransform = nodes[i].transform;
+
+                        // Give the main thread a chance to do something else
+                        if (i % 15 == 0)
+                        {
+                            yield return null;
+                        }
+
+                        // Can we path to the node and is it safe?
+                        if (!ai.IsValidPathToTarget(nodeTransform.position))
+                        {
+                            continue;
+                        }
+
+                        // Check if the node is exposed to enemies
+                        bool isNodeSafe = true;
+                        Vector3 simulatedHead = nodeTransform.position + Vector3.up * headOffset;
+                        RoundManager instanceRM = RoundManager.Instance;
+                        for (int j = 0; j < instanceRM.SpawnedEnemies.Count; j++)
+                        {
+                            EnemyAI checkLOSToTarget = instanceRM.SpawnedEnemies[j];
+                            if (checkLOSToTarget.isEnemyDead || !checkLOSToTarget.isOutside)
+                            {
+                                continue;
+                            }
+
+                            // Give the main thread a chance to do something else
+                            if (j % 10 == 0)
+                            {
+                                yield return null;
+                            }
+
+                            // Check if the target is a threat!
+                            float? dangerRange = ai.GetFearRangeForEnemies(checkLOSToTarget, EnumFearQueryType.PathfindingAvoid);
+                            Vector3 enemyPos = checkLOSToTarget.transform.position;
+                            if (dangerRange.HasValue && (enemyPos - ourPos).sqrMagnitude <= dangerRange * dangerRange)
+                            {
+                                // Do the actual traceline check
+                                Vector3 viewPos = checkLOSToTarget.eye != null ? checkLOSToTarget.eye.position : enemyPos;
+                                if (!Physics.Linecast(viewPos + Vector3.up * 0.2f, simulatedHead, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
+                                {
+                                    isNodeSafe = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // This node is dangerous! Pick another one!
+                        if (!isNodeSafe)
+                        {
+                            continue;
+                        }
+
+                        Plugin.LogDebug($"Bot {npcController.Npc.playerUsername} found fallback spot at {nodeTransform.position}!");
+                        safePathPos = nodeTransform.position;
+                        foundSafePath = true;
+                        break;
+                    }
+                }
+
+                // Hold if we found no safe path at the moment!
+                if (!foundSafePath)
+                {
+                    // If we are under water, move to the closest node instead!
+                    if (!npcController.Npc.isUnderwater)
+                    { 
+                        // If we are not on the navmesh, we will end up stuck.
+                        // Pick the closest node since this should make the stuck code realize we
+                        // may be stuck and teleport us back onto the navmesh!
+                        if (!ai.agent.isOnNavMesh)
+                        {
+                            safePathPos = GetClosestNode(npcController.Npc.transform.position)?.position ?? npcController.Npc.transform.position;
+                            Plugin.LogWarning($"Bot {npcController.Npc.playerUsername} off NavMesh, setting safePathPos to closest node at {safePathPos}");
+                        }
+                        else
+                        {
+                            safePathPos = npcController.Npc.transform.position; 
+                        }
+                    }
+                    else
+                    {
+                        safePathPos = GetClosestNode(npcController.Npc.transform.position)?.position ?? npcController.Npc.transform.position;
+                    }
+                }
+
+                // Successfull or not we should wait a bit before checking again!
+                ai.SetDestinationToPositionLethalBotAI(safePathPos);
+                yield return new WaitForSeconds(ai.AIIntervalTime);
+            }
+
+            StopSafePathCoroutine();
+        }
+
+        /// <summary>
+        /// Used by <see cref="findSafePathToTarget"/> to generate a safe path to the destination
+        /// given by this function!
+        /// </summary>
+        /// <returns>The position safe path wants to find a safe path to or null</returns>
+        protected virtual Vector3? GetDesiredSafePathPosition()
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// Used by <see cref="findSafePathToTarget"/> to check if the bot should path to
+        /// <see cref="GetDesiredSafePathPosition"/> even if the path is considered dangerous!
+        /// </summary>
+        /// <returns></returns>
+        protected virtual bool ShouldIgnoreInitialDangerCheck()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Starts the coroutine that finds a safe path to <see cref="GetDesiredSafePathPosition"/>.<br/>
+        /// </summary>
+        protected void StartSafePathCoroutine()
+        {
+            if (safePathCoroutine == null)
+            {
+                safePathCoroutine = ai.StartCoroutine(findSafePathToTarget());
+            }
+        }
+
+        /// <summary>
+        /// Stops the coroutine and cancels the async pathfind token if it exists.<br/>
+        /// </summary>
+        protected void StopSafePathCoroutine()
+        {
+            CancelAsyncPathfindToken();
+            if (safePathCoroutine != null)
+            {
+                ai.StopCoroutine(safePathCoroutine);
+                safePathCoroutine = null;
+            }
+        }
+
+        /// <summary>
+        /// Cancels the async pathfind token if it exists.<br/>
+        /// </summary>
+        protected void CancelAsyncPathfindToken()
+        {
+            try
+            {
+                pathfindCancellationToken?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Already disposed - that's ok!
+            }
+            finally
+            {
+                pathfindCancellationToken?.Dispose();
+                pathfindCancellationToken = null;
+            }
+        }
+
+        /// <summary>
+        /// Changes back to the previous state
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="previousAIState"/> is null, the bot will return to the ship!
+        /// </remarks>
+        protected virtual void ChangeBackToPreviousState()
+        {
+            if (previousAIState != null)
+            {
+                ai.State = previousAIState;
+            }
+            // HOW DID THIS HAPPEN?!!?
+            else
+            {
+                Plugin.LogError($"Bot {npcController.Npc.playerClientId} ({npcController.Npc.playerUsername}) tried to change back to previous state, but it was null! This should never happen!");
+                Plugin.LogWarning($"Bot {npcController.Npc.playerClientId} ({npcController.Npc.playerUsername}) will return to the ship instead!");
+                ai.State = new ReturnToShipState(this);
+            }
+        }
+
+        public virtual bool CheckAllowsTerminalUse() => false;
+
+        /// <summary>
+        /// Get the <see cref="Enums.EnumAIStates"><c>Enums.EnumAIStates</c></see> of current State
+        /// </summary>
+        /// <returns></returns>
+        public virtual EnumAIStates GetAIState() { return CurrentState; }
+
+        public virtual string GetBillboardStateIndicator() { return string.Empty; }
+
+        /// <summary>
+        /// Helper function to find an active jester.
+        /// </summary>
+        /// <returns>The found jester or null</returns>
+        protected EnemyAI? FindNearbyJester()
+        {
+            RoundManager instanceRM = RoundManager.Instance;
+            foreach (EnemyAI enemy in instanceRM.SpawnedEnemies)
+            {
+                if (enemy == null || enemy.isEnemyDead)
+                {
+                    continue;
+                }
+
+                if (enemy.enemyType.enemyName != "Jester" && enemy is not JesterAI)
+                {
+                    continue;
+                }
+
+                float? fearRange = ai.GetFearRangeForEnemies(enemy);
+                if (fearRange.HasValue)
+                {
+                    return enemy;
+                }
+            }
+            return null;
+        }
+    }
+}

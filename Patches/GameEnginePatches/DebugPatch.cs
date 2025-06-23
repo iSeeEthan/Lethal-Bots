@@ -1,0 +1,25 @@
+﻿using HarmonyLib;
+using System;
+using UnityEngine;
+
+namespace LethalBots.Patches.GameEnginePatches
+{
+    /// <summary>
+    /// Patch for the debug system
+    /// </summary>
+    [HarmonyPatch(typeof(Debug))]
+    public class DebugPatch
+    {
+        /// <summary>
+        /// Intercept log error to log more info, i.e. the stack trace not always shown
+        /// </summary>
+        /// <returns></returns>
+        [HarmonyPatch("LogError", new Type[] { typeof(object) })]
+        [HarmonyPrefix]
+        public static bool LogError_Prefix()
+        {
+            Plugin.LogDebug(Environment.StackTrace);
+            return true;
+        }
+    }
+}
