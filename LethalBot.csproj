@@ -101,7 +101,7 @@
     <PackageReference Include="Mono.pdb2mdb" Version="0.1.0.20130128" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Rune580.Mods.LethalCompany.InputUtils" Version="0.7.10" />
-    <PackageReference Include="UnityEngine.Modules" Version="6000.1.7" IncludeAssets="compile" />
+    <PackageReference Include="UnityEngine.Modules" Version="6000.1.8" IncludeAssets="compile" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
