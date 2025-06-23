@@ -1,5 +1,7 @@
-﻿using HarmonyLib;
+﻿using GameNetcodeStuff;
+using HarmonyLib;
 using LethalBots.AI;
+using LethalBots.Managers;
 using UnityEngine;
 
 namespace LethalBots.Patches.MapHazardsPatches
@@ -14,20 +16,17 @@ namespace LethalBots.Patches.MapHazardsPatches
         // NEEDTOVALIDATE: Should I use a transpiler or do my own logic here.......
         [HarmonyPatch("OnTriggerStay")]
         [HarmonyPostfix]
-        static void OnTriggerStay_PostFix(Collider other)
+        static void OnTriggerStay_PostFix(SpikeRoofTrap __instance, Collider other)
         {
-            EnemyAICollisionDetect enemyAICollisionDetect = other.gameObject.GetComponent<EnemyAICollisionDetect>();
-            if (enemyAICollisionDetect != null 
-                && enemyAICollisionDetect.mainScript != null 
-                && enemyAICollisionDetect.mainScript.IsOwner 
-                && enemyAICollisionDetect.mainScript.enemyType.canDie 
-                && !enemyAICollisionDetect.mainScript.isEnemyDead)
+            if (!__instance.trapActive || !__instance.slammingDown || (Time.realtimeSinceStartup - __instance.timeSinceMovingUp) < 0.75f)
             {
-                LethalBotAI? lethalBotAI = enemyAICollisionDetect.mainScript as LethalBotAI;
-                if (lethalBotAI != null)
-                {
-                    lethalBotAI.NpcController.Npc.KillPlayer(Vector3.down * 17f, spawnBody: true, CauseOfDeath.Crushing, 0, default(Vector3));
-                }
+                return;
+            }
+            PlayerControllerB component = other.gameObject.GetComponent<PlayerControllerB>();
+            if (component != null && LethalBotManager.Instance.IsPlayerLethalBotOwnerLocal(component) && !component.isPlayerDead)
+            {
+                component.KillPlayer(Vector3.down * 17f, spawnBody: true, CauseOfDeath.Crushing);
+                return;
             }
         }
     }

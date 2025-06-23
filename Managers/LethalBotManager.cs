@@ -1989,7 +1989,7 @@ namespace LethalBots.Managers
                 return false;
             }
 
-            LethalBotAI? lethalBotAI = GetLethalBotAI((int)player.playerClientId);
+            LethalBotAI? lethalBotAI = GetLethalBotAI(player);
             if (lethalBotAI == null)
             {
                 return false;
