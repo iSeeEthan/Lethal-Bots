@@ -2,14 +2,14 @@
 An edit of the mod Lethal Interns with the intent of making the Interns more like players with the benefits and downsides that come with it
 
 Note from HR :
-<br/>_As you may or may not know, our great company suffers from this staggering inflation, costs are rising, and budget cuts are on the way. 
+<br/>_As you may or may not know, our great company suffers from this staggering employee shortage, unfufilled quotas are rising, and budget cuts are on the way. 
 <br/>But our dearest executives have found a solution to get the company back on track : 
 <br/>
-<br/>Bots!
+<br/>Bots! ..... I mean, high quality players!
 <br/>
-<br/>Willing to work, cheap and plentiful, these workers will support you and make your work faster and more efficient.
+<br/>Willing to work, free and plentiful, these workers will support you and make your work faster and more efficient.
 <br/>Don't worry, they're not intended to replace you.
-<br/>So don't hesitate to make use of them and together become 
+<br/>So don't hesitate to work together with them and become 
 <br/>
 <br/>Great assets to the company_
 
@@ -17,7 +17,7 @@ Note from HR :
 
 ## Bots and how they spawn
 
-These passionate workers spawn in after landing on a moon.
+These passionate workers spawn in after you start landing on a moon.
 The number of bots that spawn depend on how many player slots are available and the maximum number of bots set in the config<br/>
 <br/>**They return to the ship**
 <br/>If they lose the player they are following and it starts getting late out,
