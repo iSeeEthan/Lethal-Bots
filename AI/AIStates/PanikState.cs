@@ -65,6 +65,13 @@ namespace LethalBots.AI.AIStates
                 float? fearRange = ai.GetFearRangeForEnemies(this.currentEnemy);
                 if (fearRange.HasValue)
                 {
+                    // Why run when we can fight back!
+                    if (ai.HasCombatWeapon() && ai.CanEnemyBeKilled(this.currentEnemy))
+                    {
+                        ai.State = new FightEnemyState(this, this.currentEnemy);
+                        return;
+                    }
+
                     // Find the closest entrance and mark our last pos for stuck checking!
                     targetEntrance = FindClosestEntrance();
                     StartPanikCoroutine(this.currentEnemy, fearRange.Value);
