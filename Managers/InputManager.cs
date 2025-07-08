@@ -372,7 +372,7 @@ namespace LethalBots.Managers
                 {
                     continue;
                 }
-                LethalBotAI? lethalBot = LethalBotManager.Instance.GetLethalBotAI((int)player.playerClientId);
+                LethalBotAI? lethalBot = LethalBotManager.Instance.GetLethalBotAI(player);
                 if (lethalBot == null 
                     || lethalBot.IsSpawningAnimationRunning())
                 {

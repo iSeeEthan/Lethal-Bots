@@ -26,14 +26,26 @@ namespace LethalBots.AI.AIStates
         private float waitForSafePathTimer;
         public static bool IsThereATrappedPlayer { private set; get; }
 
-        public SearchingForScrapState(AIState oldState) : base(oldState)
+        public SearchingForScrapState(AIState oldState, EntranceTeleport? entranceToAvoid = null) : base(oldState)
         {
             CurrentState = EnumAIStates.SearchingForScrap;
+            if (entranceToAvoid != null)
+            {
+                // If we are avoiding an entrance, we should set it as the target entrance
+                this.targetEntrance = entranceToAvoid;
+                waitForSafePathTimer = float.MaxValue; // HACKHACK: Set this to max, so when we start the state, we pick a new entrance!
+            }
         }
 
-        public SearchingForScrapState(LethalBotAI ai) : base(ai)
+        public SearchingForScrapState(LethalBotAI ai, EntranceTeleport? entranceToAvoid = null) : base(ai)
         {
             CurrentState = EnumAIStates.SearchingForScrap;
+            if (entranceToAvoid != null)
+            {
+                // If we are avoiding an entrance, we should set it as the target entrance
+                this.targetEntrance = entranceToAvoid;
+                waitForSafePathTimer = float.MaxValue; // HACKHACK: Set this to max, so when we start the state, we pick a new entrance!
+            }
         }
 
         public override void OnEnterState()
@@ -154,6 +166,11 @@ namespace LethalBots.AI.AIStates
                     {
                         Plugin.LogDebug($"======== TeleportLethalBotAndSync {ai.NpcController.Npc.playerUsername} !!!!!!!!!!!!!!! ");
                         ai.StopMoving();
+                        if (!IsEntranceSafe(targetEntrance))
+                        {
+                            waitForSafePathTimer += ai.AIIntervalTime;
+                            return; // We should not use the entrance if the entrance is not safe!
+                        }
                         ai.SyncTeleportLethalBot(entranceTeleportPos.Value, !this.targetEntrance?.isEntranceToBuilding ?? !ai.isOutside, this.targetEntrance);
                     }
                     else

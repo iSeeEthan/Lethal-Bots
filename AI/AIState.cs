@@ -5,6 +5,7 @@ using LethalBots.Managers;
 using LethalBots.Patches.EnemiesPatches;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -61,6 +62,7 @@ namespace LethalBots.AI
         protected EntranceTeleport? targetEntrance = null;
         protected bool hasBeenStarted = false;
         private GameObject? lastStuckNode;
+        private Dictionary<EntranceTeleport, (bool isSafe, float lastSafetyCheck)> entranceSafetyCache = new Dictionary<EntranceTeleport, (bool isSafe, float lastSafetyCheck)>();
 
         /// <summary>
         /// Constructor from another state
@@ -262,6 +264,8 @@ namespace LethalBots.AI
         {
             // Try not to crouch if we are under water!
             // We could down if we do!
+            // FIXME: We should probably let the bot crouch if they are under water,
+            // but we should make them stand up if they are close to drowning!
             if (npcController.Npc.isUnderwater)
             {
                 return false;
@@ -461,6 +465,45 @@ namespace LethalBots.AI
                 }
                 return false;
             }
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if the entrance is safe to use.<br/>
+        /// </summary>
+        /// <param name="entrance"></param>
+        /// <returns></returns>
+        public bool IsEntranceSafe(EntranceTeleport? entrance)
+        {
+            if (entrance == null 
+                || !entrance.FindExitPoint())
+            {
+                return false;
+            }
+
+            // Check if we have a cached value for this entrance
+            if (entranceSafetyCache.TryGetValue(entrance, out var cachedSafety))
+            {
+                // If the last safety check was less than 1 second ago, we can use the cached value
+                if (Time.timeSinceLevelLoad - cachedSafety.lastSafetyCheck < 1f)
+                {
+                    return cachedSafety.isSafe;
+                }
+            }
+
+            // If we don't have a cached value, we need to check if the entrance is safe
+            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies)
+            {
+                if ((enemy.transform.position - entrance.exitPoint.transform.position).sqrMagnitude < 7.7f * 7.7f && !enemy.isEnemyDead)
+                {
+                    // We found an enemy near the exit point, so we should not use this entrance!
+                    entranceSafetyCache[entrance] = (false, Time.timeSinceLevelLoad);
+                    return false;
+                }
+            }
+
+            // If we didn't find any enemies near the exit point, we can use this entrance!
+            entranceSafetyCache[entrance] = (true, Time.timeSinceLevelLoad);
             return true;
         }
 

@@ -146,13 +146,18 @@ namespace LethalBots.AI.AIStates
                 }
                 // Wait outside the door a bit before heading back in,
                 // if we have been waiting for a bit give up and head back!
-                if (calmDownTimer > Const.FLEEING_CALM_DOWN_TIME + 60f 
-                    || ShouldReturnToShip())
+                if (ShouldReturnToShip())
                 {
-                    ai.State = new ReturnToShipState(this);
+                     ai.State = new ReturnToShipState(this);
+                    return;
+                }
+                else if (calmDownTimer > Const.FLEEING_CALM_DOWN_TIME + 60f)
+                {
+                    ai.State = new SearchingForScrapState(this, targetEntrance);
                     return;
                 }
                 else if (calmDownTimer > Const.FLEEING_CALM_DOWN_TIME 
+                    && IsEntranceSafe(targetEntrance)
                     && FindNearbyJester() == null)
                 {
                     ChangeBackToPreviousState();
