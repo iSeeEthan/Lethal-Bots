@@ -74,7 +74,7 @@ namespace LethalBots.Patches.EnemiesPatches
                 GiantKiwiPlayerMonitor giantKiwiPlayerMonitor = GetOrCreateMonitor(__instance);
                 foreach (var lethalBotAIs in giantKiwiPlayerMonitor.lethalBotAIs)
                 {
-                    if (lethalBotAIs.Key != null && (Time.timeSinceLevelLoad - lethalBotAIs.Value) < 0.1f)
+                    if (lethalBotAIs.Key != null && giantKiwiPlayerMonitor.ShouldApplyDamageTo(lethalBotAIs.Key))
                     {
                         PlayerControllerB lethalBotController = lethalBotAIs.Key.NpcController.Npc;
                         _ = lethalBotController.transform.position;
@@ -94,6 +94,12 @@ namespace LethalBots.Patches.EnemiesPatches
             public void UpdateTimeSinceHittingBot(LethalBotAI bot)
             {
                 lethalBotAIs[bot] = Time.timeSinceLevelLoad;
+            }
+
+            public bool ShouldApplyDamageTo(LethalBotAI bot)
+            {
+                float lastDamageTime = lethalBotAIs.GetValueOrDefault(bot);
+                return (Time.timeSinceLevelLoad - lastDamageTime) < 0.1f;
             }
         }
     }

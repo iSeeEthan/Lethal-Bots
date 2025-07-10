@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
+using LethalBots.AI;
 using LethalBots.Managers;
 using LethalBots.Utils;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace LethalBots.Patches.EnemiesPatches
     [HarmonyPatch(typeof(FlowermanAI))]
     public class FlowermanAIPatch
     {
+        private static float nextUpdateCheck;
+
         /// <summary>
         /// Fixes bug where bots are unable to fend off the Braken since the checks are only for the local client!
         /// </summary>
@@ -24,12 +27,20 @@ namespace LethalBots.Patches.EnemiesPatches
             {
                 return;
             }
-            StartOfRound instanceSOR = StartOfRound.Instance;
-            for (int i = 0; i < instanceSOR.allPlayerScripts.Length; i++)
+
+            // Optimization, only run this every half a second!
+            nextUpdateCheck += Time.deltaTime;
+            if (nextUpdateCheck < 0.5f)
             {
-                PlayerControllerB lethalBotController = instanceSOR.allPlayerScripts[i];
-                if (lethalBotController != null
-                    && LethalBotManager.Instance.IsPlayerLethalBotOwnerLocal(lethalBotController))
+                return;
+            }
+
+            nextUpdateCheck = 0f;
+            LethalBotAI[] lethalBotAIs = LethalBotManager.Instance.GetLethalBotsAIOwnedByLocal();
+            foreach (LethalBotAI lethalBotAI in lethalBotAIs)
+            {
+                PlayerControllerB? lethalBotController = lethalBotAI?.NpcController?.Npc;
+                if (lethalBotController != null)
                 {
                     if (lethalBotController.HasLineOfSightToPosition(__instance.transform.position + Vector3.up * 0.5f, 30f))
                     {

@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using GameNetcodeStuff;
+using HarmonyLib;
+using LethalBots.AI;
 using LethalBots.Constants;
 using LethalBots.Managers;
 using LethalBots.Utils;
@@ -16,6 +18,8 @@ namespace LethalBots.Patches.EnemiesPatches
     [HarmonyAfter(Const.MORECOMPANY_GUID)]
     public class CrawlerAIPatch
     {
+        private static float nextUpdateCheck;
+
         /// <summary>
         /// <inheritdoc cref="ButlerBeesEnemyAIPatch.OnCollideWithPlayer_Transpiler"/>
         /// </summary>
@@ -150,6 +154,70 @@ namespace LethalBots.Patches.EnemiesPatches
             }
 
             return codes.AsEnumerable();
+        }
+
+        /// <summary>
+        /// Fixes bug where bots do not gain fear when being chased by the thumper!
+        /// </summary>
+        /// <param name="__instance"></param>
+        [HarmonyPatch("Update")]
+        [HarmonyPostfix]
+        public static void Update_Postfix(CrawlerAI __instance)
+        {
+            if (__instance.isEnemyDead)
+            {
+                return;
+            }
+
+            // Optimization, only run this every half a second!
+            nextUpdateCheck += Time.deltaTime;
+            if (nextUpdateCheck < 0.5f)
+            {
+                return;
+            }
+
+            nextUpdateCheck = 0f;
+            LethalBotAI[] lethalBotAIs = LethalBotManager.Instance.GetLethalBotsAIOwnedByLocal();
+            foreach (LethalBotAI lethalBotAI in lethalBotAIs)
+            {
+                PlayerControllerB? lethalBotController = lethalBotAI?.NpcController?.Npc;
+                if (lethalBotController != null)
+                {
+                    if (lethalBotController.HasLineOfSightToPosition(__instance.transform.position + Vector3.up * 0.25f, 80f, 25, 5f))
+                    {
+                        if (__instance.currentBehaviourStateIndex == 1)
+                        {
+                            lethalBotController.IncreaseFearLevelOverTime(0.8f);
+                        }
+                        else
+                        {
+                            lethalBotController.IncreaseFearLevelOverTime(0.8f, 0.5f);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fixes bug where bots do not gain fear when being chased by the thumper!
+        /// </summary>
+        /// <param name="__instance"></param>
+        [HarmonyPatch("MakeScreech")]
+        [HarmonyPostfix]
+        public static void MakeScreech_Postfix(CrawlerAI __instance)
+        {
+            LethalBotAI[] lethalBotAIs = LethalBotManager.Instance.GetLethalBotsAIOwnedByLocal();
+            foreach (LethalBotAI lethalBotAI in lethalBotAIs)
+            {
+                PlayerControllerB? lethalBotController = lethalBotAI?.NpcController?.Npc;
+                if (lethalBotController != null)
+                {
+                    if ((lethalBotController.transform.position - __instance.transform.position).sqrMagnitude < 15f * 15f)
+                    {
+                        lethalBotController.JumpToFearLevel(0.75f);
+                    }
+                }
+            }
         }
     }
 }
