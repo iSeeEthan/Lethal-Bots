@@ -74,7 +74,7 @@ Some AI voices should be added next update (0.20.0)
 This mod is compatible with ModelReplacementAPI and all of its users (tooManySuits, MoreSuits, ThiccCompany, etc...).
 It is also compatible with the emotes mod, emote in front of bot and they will copy your dance moves !
 
-</br>![Lethal-internship-logo](https://github.com/Szumi57/LethalInternship/blob/master/Assets/Images/interns_suits.png?raw=true)</br>
+</br>![Lethal-internship-logo](https://github.com/Szumi57/LethalInternship/blob/master/Assets/Images/bot_suits.gif?raw=true)</br>
 
 ## Chat commands!
 The bots have a few chat commands that you can use to tell them to do certain things.
