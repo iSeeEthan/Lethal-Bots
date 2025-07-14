@@ -586,7 +586,7 @@ namespace LethalBots.AI.AIStates
             /// We do less async calculations the further we are from our target enemy!
             Transform enemyTransform = enemy.transform;
             Vector3 enemyPos = enemyTransform.position;
-            Vector3 viewPos = enemy.eye != null ? enemy.eye.position : enemyPos;
+            Vector3 viewPos = enemy.eye?.position ?? enemyPos;
             float ourDistanceFromEnemy = (enemyTransform.position - npcController.Npc.transform.position).sqrMagnitude;
             float headOffset = npcController.Npc.gameplayCamera.transform.position.y - npcController.Npc.transform.position.y;
             int maxAsync;

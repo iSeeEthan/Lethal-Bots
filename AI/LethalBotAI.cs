@@ -2278,7 +2278,8 @@ namespace LethalBots.AI
                 }
 
                 // Obstructed
-                if (Physics.Linecast(thisLethalBotCamera.position, positionEnemy, instanceSOR.collidersAndRoomMaskAndDefault))
+                Vector3 viewPos = spawnedEnemy.eye?.position ?? positionEnemy;
+                if (Physics.Linecast(thisLethalBotCamera.position, viewPos, instanceSOR.collidersAndRoomMaskAndDefault))
                 {
                     continue;
                 }
@@ -2480,7 +2481,7 @@ namespace LethalBots.AI
                     if ((enemyPos - headPos).sqrMagnitude <= dangerRange * dangerRange)
                     {
                         // Do the actual traceline check
-                        Vector3 viewPos = checkLOSToTarget.eye != null ? checkLOSToTarget.eye.position : enemyPos;
+                        Vector3 viewPos = checkLOSToTarget.eye?.position ?? enemyPos;
                         if (!Physics.Linecast(viewPos + Vector3.up * 0.25f, headPos, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
                         {
                             _areWeExposed = true;
@@ -2661,7 +2662,7 @@ namespace LethalBots.AI
             Vector3 ourPos = NpcController.Npc.transform.position;
             foreach (EnemyAI spawnedEnemy in instanceRM.SpawnedEnemies)
             {
-                if (!spawnedEnemy.isEnemyDead && spawnedEnemy.enemyType.enemyName == "MouthDog")
+                if (!spawnedEnemy.isEnemyDead && (spawnedEnemy is MouthDogAI || spawnedEnemy.enemyType.enemyName == "MouthDog"))
                 {
                     // NOTE: We don't use GetFearRangeForEnemies since
                     // we don't want to trigger the dog in the first place
