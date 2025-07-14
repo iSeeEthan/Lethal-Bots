@@ -838,6 +838,7 @@ namespace LethalBots.AI
                     // We are still exposed, find cover now!
                     // NEEDTOVALIDATE: Should this be the local vector instead of just the height?
                     Vector3 ourPos = npcController.Npc.transform.position;
+                    bool ourWeOutside = ai.isOutside;
                     float headOffset = npcController.Npc.gameplayCamera.transform.position.y - ourPos.y;
                     for (var i = 0; i < nodes.Length; i++)
                     {
@@ -862,7 +863,7 @@ namespace LethalBots.AI
                         for (int j = 0; j < instanceRM.SpawnedEnemies.Count; j++)
                         {
                             EnemyAI checkLOSToTarget = instanceRM.SpawnedEnemies[j];
-                            if (checkLOSToTarget.isEnemyDead || !checkLOSToTarget.isOutside)
+                            if (checkLOSToTarget.isEnemyDead || ourWeOutside != checkLOSToTarget.isOutside)
                             {
                                 continue;
                             }
