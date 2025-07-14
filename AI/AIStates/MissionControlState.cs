@@ -487,6 +487,10 @@ namespace LethalBots.AI.AIStates
         /// <summary>
         /// Makes the bot disable traps nearby the given player!
         /// </summary>
+        /// <remarks>
+        /// FIXME: This is a bit different compared to how the base game does it,
+        /// we should be doing every object with the same code rather than only the object we want to use.
+        /// </remarks>
         /// <param name="player"></param>
         /// <returns></returns>
         private IEnumerator UseTerminalAccessibleObjects(PlayerControllerB player)
@@ -538,6 +542,16 @@ namespace LethalBots.AI.AIStates
                 if (ShouldTeleportDeadBody(player))
                 {
                     yield return TryTeleportPlayer(true);
+                }
+                // HACKHACK: Make the bot "pick-up" the dead body so they get marked as collected!
+                else if (player.deadBody != null)
+                {
+                    DeadBodyInfo deadBodyInfo = player.deadBody;
+                    if (!deadBodyInfo.isInShip
+                        && StartOfRound.Instance.shipInnerRoomBounds.bounds.Contains(deadBodyInfo.transform.position))
+                    {
+                        npcController.Npc.SetItemInElevator(true, true, deadBodyInfo.grabBodyObject);
+                    }
                 }
             }
             else if (!player.isInElevator && !player.isInHangarShipRoom)
@@ -840,9 +854,7 @@ namespace LethalBots.AI.AIStates
             DeadBodyInfo? deadBodyInfo = player.deadBody;
             if (deadBodyInfo != null
                 && !deadBodyInfo.isInShip
-                && !deadBodyInfo.grabBodyObject.isInShipRoom
                 && !deadBodyInfo.grabBodyObject.isHeld
-                && !StartOfRound.Instance.shipInnerRoomBounds.bounds.Contains(deadBodyInfo.transform.position)
                 && !ai.CheckProximityForEyelessDogs())
             {
                 return true;

@@ -1020,6 +1020,10 @@ namespace LethalBots.AI
             }
         }
 
+        /// <summary>
+        /// Function that checks if the bot should automatically get off the terminal!
+        /// </summary>
+        /// <returns><see langword="true"/> the bot will not automatically leave the terminal. <see langword="false"/> the bot will automatically get off the terminal</returns>
         public virtual bool CheckAllowsTerminalUse() => false;
 
         /// <summary>
