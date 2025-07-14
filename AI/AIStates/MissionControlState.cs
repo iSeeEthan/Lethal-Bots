@@ -254,6 +254,7 @@ namespace LethalBots.AI.AIStates
                 // We don't have the walkie-talkie, so we should pick it up!
                 if (!ai.HasGrabbableObjectInInventory(walkieTalkie, out int walkieSlot))
                 { 
+                    LethalBotAI.DictJustDroppedItems[walkieTalkie] = 0; // HACKHACK: Since the walkie-talkie is on the ship, we clear the just dropped item timer!
                     ai.State = new FetchingObjectState(this, walkieTalkie);
                     return;
                 }
