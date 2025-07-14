@@ -1479,13 +1479,13 @@ namespace LethalBots.AI
             }
 
             float threshold = 0f;
-            if (IsWalking)
-            {
-                threshold = 0.498f;
-            }
-            else if (Npc.isSprinting)
+            if (Npc.isSprinting)
             {
                 threshold = 0.170f + Random.Range(0f, 0.070f);
+            }
+            else if (IsWalking)
+            {
+                threshold = 0.498f;
             }
 
             if (threshold > 0f)
