@@ -652,7 +652,6 @@ namespace LethalBots.AI.AIStates
                     if (!Physics.Linecast(viewPos + Vector3.up * 0.2f, simulatedHead, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
                     {
                         nodeSafety.isNodeOutOfSight = false;
-                        break;
                     }
                 }
 
