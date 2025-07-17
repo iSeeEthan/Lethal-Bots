@@ -797,7 +797,8 @@ namespace LethalBots.AI
             {
                 return true;
             }
-            if (NpcController.Npc.currentTriggerInAnimationWith != null)
+            if (NpcController.Npc.currentTriggerInAnimationWith != null 
+                && !NpcController.Npc.isClimbingLadder)
             {
                 return true;
             }
