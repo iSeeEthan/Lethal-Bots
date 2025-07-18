@@ -260,14 +260,16 @@ namespace LethalBots.Patches.MapPatches
             playerController.playerBodyAnimator.SetTrigger("EnterLadder");
             playerController.thisController.enabled = false;
             float timer = 0f;
+            Vector3 ladderPosition = ladder.ladderPlayerPositionNode.position;
+            Quaternion ladderAngle = ladder.ladderPlayerPositionNode.rotation;
             while (timer <= ladder.animationWaitTime)
             {
                 yield return null;
                 timer += Time.deltaTime;
-                playerController.thisPlayerBody.position = Vector3.Lerp(playerController.thisPlayerBody.position, ladder.ladderPlayerPositionNode.position, Mathf.SmoothStep(0f, 1f, timer / ladder.animationWaitTime));
-                playerController.thisPlayerBody.rotation = Quaternion.Lerp(playerController.thisPlayerBody.rotation, ladder.ladderPlayerPositionNode.rotation, Mathf.SmoothStep(0f, 1f, timer / ladder.animationWaitTime));
+                playerController.thisPlayerBody.position = Vector3.Lerp(playerController.thisPlayerBody.position, ladderPosition, Mathf.SmoothStep(0f, 1f, timer / ladder.animationWaitTime));
+                playerController.thisPlayerBody.rotation = Quaternion.Lerp(playerController.thisPlayerBody.rotation, ladderAngle, Mathf.SmoothStep(0f, 1f, timer / ladder.animationWaitTime));
             }
-            playerController.TeleportPlayer(ladder.ladderPlayerPositionNode.position, withRotation: false, 0f, allowInteractTrigger: true);
+            playerController.TeleportPlayer(ladderPosition, withRotation: false, 0f, allowInteractTrigger: true);
             Plugin.LogDebug("Finished snapping to ladder");
             playerController.playerBodyAnimator.SetBool("ClimbingLadder", value: true);
             playerController.isClimbingLadder = true;
@@ -287,15 +289,15 @@ namespace LethalBots.Patches.MapPatches
                     finishClimbingLadder = 2;
                 }
             }
-            playerController.isClimbingLadder = false;
+            //playerController.isClimbingLadder = false;
             playerController.playerBodyAnimator.SetBool("ClimbingLadder", value: false);
             if (finishClimbingLadder == 1)
             {
-                ladder.ladderPlayerPositionNode.position = ladder.bottomOfLadderPosition.position;
+                ladderPosition = ladder.bottomOfLadderPosition.position;
             }
             else if (!ladder.useRaycastToGetTopPosition)
             {
-                ladder.ladderPlayerPositionNode.position = ladder.topOfLadderPosition.position;
+                ladderPosition = ladder.topOfLadderPosition.position;
             }
             else
             {
@@ -303,13 +305,13 @@ namespace LethalBots.Patches.MapPatches
                 if (Physics.Linecast(playerController.transform.position + Vector3.up, ladder.topOfLadderPosition.position + Vector3.up, out var hitInfo, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
                 {
                     Debug.DrawLine(playerController.transform.position + Vector3.up, ladder.topOfLadderPosition.position + Vector3.up, Color.red, 10f);
-                    ladder.ladderPlayerPositionNode.position = ray.GetPoint(Mathf.Max(hitInfo.distance - 1.2f, 0f));
-                    Debug.DrawRay(ladder.ladderPlayerPositionNode.position, Vector3.up * 0.5f, Color.yellow, 10f);
+                    ladderPosition = ray.GetPoint(Mathf.Max(hitInfo.distance - 1.2f, 0f));
+                    Debug.DrawRay(ladderPosition, Vector3.up * 0.5f, Color.yellow, 10f);
                 }
                 else
                 {
                     Debug.DrawLine(playerController.transform.position + Vector3.up, ladder.topOfLadderPosition.position + Vector3.up, Color.green, 10f);
-                    ladder.ladderPlayerPositionNode.position = ladder.topOfLadderPosition.position;
+                    ladderPosition = ladder.topOfLadderPosition.position;
                 }
             }
             timer = 0f;
@@ -318,19 +320,22 @@ namespace LethalBots.Patches.MapPatches
             {
                 yield return null;
                 timer += Time.deltaTime;
-                playerController.thisPlayerBody.position = Vector3.Lerp(playerController.thisPlayerBody.position, ladder.ladderPlayerPositionNode.position, Mathf.SmoothStep(0f, 1f, timer / shorterWaitTime));
-                playerController.thisPlayerBody.rotation = Quaternion.Lerp(playerController.thisPlayerBody.rotation, ladder.ladderPlayerPositionNode.rotation, Mathf.SmoothStep(0f, 1f, timer / shorterWaitTime));
+                playerController.thisPlayerBody.position = Vector3.Lerp(playerController.thisPlayerBody.position, ladderPosition, Mathf.SmoothStep(0f, 1f, timer / shorterWaitTime));
+                playerController.thisPlayerBody.rotation = Quaternion.Lerp(playerController.thisPlayerBody.rotation, ladderAngle, Mathf.SmoothStep(0f, 1f, timer / shorterWaitTime));
                 playerController.gameplayCamera.transform.rotation = Quaternion.Slerp(playerController.gameplayCamera.transform.rotation, playerController.gameplayCamera.transform.parent.rotation, Mathf.SmoothStep(0f, 1f, timer / shorterWaitTime));
             }
             playerController.gameplayCamera.transform.localEulerAngles = Vector3.zero;
             Debug.Log("Finished ladder sequence");
             playerController.UpdateSpecialAnimationValue(specialAnimation: false, 0);
+            playerController.isClimbingLadder = false;
             playerController.inSpecialInteractAnimation = false;
+            playerController.currentTriggerInAnimationWith = null; // HACKHACK: Where does the base game set this to null?
             playerController.thisController.enabled = true; // NEEDTOVALIDATE: What happens if this is true for players that are not the local player?
             LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(playerController);
             if (lethalBotAI != null && lethalBotAI.agent.isOnOffMeshLink)
             {
                 lethalBotAI.agent.CompleteOffMeshLink();
+                lethalBotAI.TeleportLethalBot(ladderPosition, lethalBotAI.isOutside, allowInteractTrigger: true);
             }
             lethalBotAI?.useLadderCoroutine = null;
             ladder.currentCooldownValue = ladder.cooldownTime;
