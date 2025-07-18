@@ -1947,6 +1947,7 @@ namespace LethalBots.AI
 
             if (agent.isActiveAndEnabled
                 && agent.isOnNavMesh
+                && !agent.isOnOffMeshLink
                 && !isEnemyDead
                 && !NpcController.Npc.isPlayerDead)
             {

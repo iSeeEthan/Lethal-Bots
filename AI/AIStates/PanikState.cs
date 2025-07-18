@@ -257,6 +257,12 @@ namespace LethalBots.AI.AIStates
                             ai.StopMoving();
                             ai.SyncTeleportLethalBot(entranceTeleportPos.Value, !this.targetEntrance?.isEntranceToBuilding ?? !ai.isOutside, this.targetEntrance);
                             calmDownTimer = ai.AIIntervalTime;
+                            if (ai.targetPlayer != null && ai.targetPlayer.isInsideFactory)
+                            {
+                                // If we use the entrance to go outside, we should set the last known position to the entrance teleport position
+                                // This makes us use the entrance again so we can follow the player back inside
+                                targetLastKnownPosition = entranceTeleportPos.Value;
+                            }
                         }
                         else
                         {

@@ -2352,6 +2352,15 @@ namespace LethalBots.Managers
                 lethalBotController.TeleportPlayer(lethalBotController.playersManager.notSpawnedPosition.position);
                 lethalBotController.localVisor.position = lethalBotController.playersManager.notSpawnedPosition.position;
                 DisableLethalBotControllerModel(lethalBotController.gameObject, lethalBotController, enable: true, disableLocalArms: true);
+                
+                // Reset the animator state
+                Animator lethalBotAnimator = lethalBotController.playerBodyAnimator;
+                if (lethalBotAnimator != null)
+                {
+                    lethalBotAnimator.Rebind(true);
+                    lethalBotAnimator.Update(0f);
+                }
+
                 lethalBotController.transform.position = lethalBotController.playersManager.notSpawnedPosition.position;
                 lethalBotController.thisController.enabled = false;
                 if (!NetworkManager.Singleton.ShutdownInProgress && base.IsServer)

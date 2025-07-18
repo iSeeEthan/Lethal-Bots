@@ -220,6 +220,7 @@ namespace LethalBots.Managers
                 else if (currentBotState != EnumAIStates.SearchingForScrap)
                 {
                     lethalBot.State = new SearchingForScrapState(lethalBot.State);
+                    lethalBot.targetPlayer = null; // Clear target player since we are not following them anymore
                 }
 
                 //HUDManager.Instance.ClearControlTips();
