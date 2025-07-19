@@ -211,6 +211,20 @@ namespace LethalBots.Managers
             Plugin.LogDebug($"Saved instance: {Instance}, This object: {this}");
         }
 
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (!base.NetworkManager.IsServer)
+            {
+                if (Instance != null && Instance != this)
+                {
+                    Destroy(Instance.gameObject);
+                }
+                Instance = this;
+            }
+        }
+
         private void Config_InitialSyncCompleted(object sender, EventArgs e)
         {
             if (IsHost)

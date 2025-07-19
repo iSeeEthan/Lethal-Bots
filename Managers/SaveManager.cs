@@ -42,6 +42,20 @@ namespace LethalBots.Managers
             FetchSaveFile();
         }
 
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (!base.NetworkManager.IsServer)
+            {
+                if (Instance != null && Instance != this)
+                { 
+                    Destroy(Instance.gameObject); 
+                }
+                Instance = this;
+            }
+        }
+
         /// <summary>
         /// Get the save file and load it into the save data, or create a new one if no save file found
         /// </summary>

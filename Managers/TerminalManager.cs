@@ -33,6 +33,20 @@ namespace LethalBots.Managers
             Instance = this;
         }
 
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (!base.NetworkManager.IsServer)
+            {
+                if (Instance != null && Instance != this)
+                {
+                    Destroy(Instance.gameObject);
+                }
+                Instance = this;
+            }
+        }
+
         public Terminal GetTerminal()
         {
             if (terminalScript == null)
