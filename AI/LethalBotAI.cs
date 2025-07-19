@@ -1555,11 +1555,14 @@ namespace LethalBots.AI
 
             // T-Rizzle: I don't know what 262144 stands for,
             // all I know is that is what the default EnemyAI uses
-            if (Physics.Linecast(from, to, 262144))
+            // NEEDTOVALIDATE: Why does this exist!? It seems to trigger randomly and cause issues with the bot!
+            // Making normally safe paths dangerous!
+            // Commenting this out for now, but I should look into this later!
+            /*if (Physics.Linecast(from, to, 262144))
             {
                 Plugin.LogDebug($"{NpcController.Npc.playerUsername}: The path is blocked by line of sight.");
                 return true;
-            }
+            }*/
 
             // This CANNOT be a foreach loop since we are running over time!
             RoundManager instanceRM = RoundManager.Instance;
