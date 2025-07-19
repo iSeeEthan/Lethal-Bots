@@ -1553,9 +1553,17 @@ namespace LethalBots.AI
         {
             Plugin.LogDebug($"{NpcController.Npc.playerUsername} is checking path segment from {from} to {to} for enemy exposure...");
 
+            // T-Rizzle: I don't know what 262144 stands for,
+            // all I know is that is what the default EnemyAI uses
+            if (Physics.Linecast(from, to, 262144))
+            {
+                Plugin.LogDebug($"{NpcController.Npc.playerUsername}: The path is blocked by line of sight.");
+                return true;
+            }
+
             // This CANNOT be a foreach loop since we are running over time!
             RoundManager instanceRM = RoundManager.Instance;
-            Vector3 travelMidPoint = Vector3.Lerp(from, to, 0.5f);
+            Vector3 travelMidPoint = RoundManager.Instance.GetNavMeshPosition(Vector3.Lerp(from, to, 0.5f)); // Make sure this is on the NavMesh!
             bool ourWeOutside = isOutside;
             string skipText = ourWeOutside ? "not outside" : "not inside";
             for (int i = 0; i < instanceRM.SpawnedEnemies.Count; i++)
@@ -1564,6 +1572,12 @@ namespace LethalBots.AI
                 if (token.IsCancellationRequested)
                 {
                     token.ThrowIfCancellationRequested();
+                }
+
+                // Give the main thread a chance to think
+                if (i % 10 == 0)
+                {
+                    await Task.Yield();
                 }
 
                 EnemyAI? enemy = instanceRM.SpawnedEnemies[i];
@@ -1580,12 +1594,6 @@ namespace LethalBots.AI
                     continue; 
                 }
 
-                // Give the main thread a chance to think
-                if (i % 10 == 0)
-                {
-                    await Task.Yield();
-                }
-
                 // Check if the target is a threat!
                 float? dangerRange = GetFearRangeForEnemies(enemy, EnumFearQueryType.PathfindingAvoid);
                 if (!dangerRange.HasValue)
@@ -1595,14 +1603,14 @@ namespace LethalBots.AI
                 }
 
                 // Fog reduce the visibility
-                if (isOutside && !enemy.enemyType.canSeeThroughFog && TimeOfDay.Instance.currentLevelWeather == LevelWeatherType.Foggy)
+                if (ourWeOutside && !enemy.enemyType.canSeeThroughFog && TimeOfDay.Instance.currentLevelWeather == LevelWeatherType.Foggy)
                 {
                     dangerRange = Mathf.Clamp(dangerRange.Value, 0, 30);
                 }
 
                 // Do the actual check!
                 Vector3 enemyPos = enemy.transform.position;
-                if ((travelMidPoint - enemy.transform.position).sqrMagnitude > dangerRange * dangerRange)
+                if ((travelMidPoint - enemyPos).sqrMagnitude > dangerRange * dangerRange)
                 {
                     Plugin.LogDebug($"{enemy.enemyType.enemyName}: Skipped (outside danger range)");
                     continue;
@@ -1613,14 +1621,6 @@ namespace LethalBots.AI
                     StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
                 {
                     Plugin.LogDebug($"{enemy.enemyType.enemyName}: Segment is exposed from midpoint to view position!");
-                    return true;
-                }
-
-                // T-Rizzle: I don't know what 262144 stands for,
-                // all I know is that is what the default EnemyAI uses
-                if (Physics.Linecast(from, to, 262144))
-                {
-                    Plugin.LogDebug($"{enemy.enemyType.enemyName}: The path is blocked by line of sight.");
                     return true;
                 }
             }
@@ -1666,15 +1666,15 @@ namespace LethalBots.AI
                     token.ThrowIfCancellationRequested();
                 }
 
-                var quicksand = QuicksandArray[i];
-                if (!quicksand.isActiveAndEnabled)
-                    continue;
-
                 // Give the main thread a chance to think
                 if (i % 5 == 0)
                 {
                     await Task.Yield();
                 }
+
+                var quicksand = QuicksandArray[i];
+                if (!quicksand.isActiveAndEnabled)
+                    continue;
 
                 Collider? collider = quicksand.gameObject.GetComponent<Collider>();
                 if (collider == null)
