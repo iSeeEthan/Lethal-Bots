@@ -1525,7 +1525,7 @@ namespace LethalBots.AI
                 }
 
                 // Check for if we walk into quicksand or water
-                var (isDangerous, updatedDrownTimer) = await CheckQuicksandDanger(previousNode, nodePos, headOffset, tempDistance, moveSpeed, predictedDrownTimer);
+                var (isDangerous, updatedDrownTimer) = await CheckQuicksandDanger(previousNode, nodePos, headOffset, tempDistance, moveSpeed, predictedDrownTimer, token);
                 predictedDrownTimer = updatedDrownTimer; // Update the global drown timer!
                 if (isDangerous)
                 {
