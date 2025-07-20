@@ -291,6 +291,7 @@ namespace LethalBots.AI
         {
             bool shouldOnlyUseFrontEntrance = ShouldOnlyUseFrontEntrance();
             bool isClosestEntranceFront = false;
+            bool ourWeOutside = ai.isOutside;
             EntranceTeleport? closestEntrance = null;
             float closestEntranceDist = float.MaxValue;
             shipPos ??= RoundManager.Instance.GetNavMeshPosition(StartOfRound.Instance.middleOfShipNode.position);
@@ -302,7 +303,7 @@ namespace LethalBots.AI
                     continue;
                 }
 
-                if (ai.isOutside && entrance.isEntranceToBuilding)
+                if (ourWeOutside && entrance.isEntranceToBuilding)
                 {
                     // If we are outside, we should only use the front entrance if needed!
                     bool isCurrentEntranceFront = IsFrontEntrance(entrance);
@@ -333,7 +334,7 @@ namespace LethalBots.AI
                         }
                     }
                 }
-                else if (!ai.isOutside && !entrance.isEntranceToBuilding)
+                else if (!ourWeOutside && !entrance.isEntranceToBuilding)
                 {
                     // NOTE: We use exit point here or the pathfind would always fail since the entrance we are using is inside the facility!
                     // If we are inside, we don't care about the front entrance, we just want to find the closest entrance that we can path to!
