@@ -323,7 +323,7 @@ namespace LethalBots.AI.AIStates
         private IEnumerator weaponAttackCoroutine()
         {
             while (ai.State != null
-                && ai.State.GetAIState() == EnumAIStates.FightEnemy
+                && ai.State == this
                 && this.currentEnemy != null 
                 && !currentEnemy.isEnemyDead)
             {

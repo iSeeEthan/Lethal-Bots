@@ -28,6 +28,7 @@ namespace LethalBots.AI
 
         public int HpMax { get; set; }
         public int Hp { get; set; }
+        public bool DiedLastRound { get; set; }
         public int? XP { get; set; }
         public int Level { get; set; }
         public EnumStatusIdentity Status { get; set; }
@@ -62,6 +63,7 @@ namespace LethalBots.AI
             Voice = voice;
             HpMax = 100;
             Hp = HpMax;
+            DiedLastRound = true;
             XP = Xp;
             Status = EnumStatusIdentity.Available;
         }

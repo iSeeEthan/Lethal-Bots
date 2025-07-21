@@ -308,7 +308,7 @@ namespace LethalBots.AI.AIStates
         {
             yield return null;
             while (ai.State != null
-                    && ai.State.GetAIState() == EnumAIStates.SearchingForScrap)
+                    && ai.State == this)
             {
                 float sprintTimeRandom = Random.Range(Const.MIN_TIME_SPRINT_SEARCH_WANDER, Const.MAX_TIME_SPRINT_SEARCH_WANDER);
                 npcController.OrderToSprint();
@@ -347,7 +347,7 @@ namespace LethalBots.AI.AIStates
         {
             yield return null;
             while (ai.State != null
-                    && ai.State.GetAIState() == EnumAIStates.SearchingForScrap)
+                    && ai.State == this)
             {
                 float freezeTimeRandom = Random.Range(Const.MIN_TIME_SEARCH_LOOKING_AROUND, Const.MAX_TIME_SEARCH_LOOKING_AROUND);
                 float angleRandom = Random.Range(0f, 360f);

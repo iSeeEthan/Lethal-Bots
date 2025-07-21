@@ -1339,7 +1339,7 @@ namespace LethalBots.Managers
         /// <param name="mostProfitable"></param>
         /// <param name="allPlayersDead"></param>
         /// <returns></returns>
-        private int GetLethalBotLevel(bool isDead, bool mostProfitable, bool allPlayersDead)
+        private static int GetLethalBotLevel(bool isDead, bool mostProfitable, bool allPlayersDead)
         {
             int num = 0;
             num = ((!isDead) ? (num + 10) : (num - 3));
@@ -1474,7 +1474,7 @@ namespace LethalBots.Managers
                     botSpawned.Value = EnumBotSpawnState.Unknown; // Reset before calling RPC
                     SpawnLethalBotServerRpc(new SpawnLethalBotParamsNetworkSerializable()
                     {
-                        enumSpawnAnimation = EnumSpawnAnimation.OnlyPlayerSpawnAnimation,
+                        enumSpawnAnimation = EnumSpawnAnimation.OnlyPlayerSpawnAnimationIfDead,
                         SpawnPosition = StartOfRoundPatch.GetPlayerSpawnPosition_ReversePatch(instanceSOR, nextPlayerIndex, simpleTeleport: false),
                         YRot = 0,
                         IsOutside = true
@@ -2516,6 +2516,7 @@ namespace LethalBots.Managers
 
                 // Mark the status as recently used so they are spawned in again!
                 lethalBotAI.LethalBotIdentity.Status = EnumStatusIdentity.ToSpawn;
+                lethalBotAI.LethalBotIdentity.DiedLastRound = lethalBotController.isPlayerDead;
                 if (lethalBotAI.State != null
                     && lethalBotAI.State.GetAIState() != EnumAIStates.BrainDead)
                 {

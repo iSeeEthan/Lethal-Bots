@@ -3,6 +3,7 @@
     public enum EnumSpawnAnimation
     {
         None = 0,
-        OnlyPlayerSpawnAnimation
+        OnlyPlayerSpawnAnimation,
+        OnlyPlayerSpawnAnimationIfDead
     }
 }

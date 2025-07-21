@@ -7183,6 +7183,11 @@ namespace LethalBots.AI
 
         public Coroutine BeginLethalBotSpawnAnimation(EnumSpawnAnimation enumSpawnAnimation)
         {
+            // Check for the OnlyPlayerSpawnAnimationIfDead flag and apply it as needed!
+            if (enumSpawnAnimation == EnumSpawnAnimation.OnlyPlayerSpawnAnimationIfDead)
+            {
+                enumSpawnAnimation = this.LethalBotIdentity.DiedLastRound ? EnumSpawnAnimation.OnlyPlayerSpawnAnimation : EnumSpawnAnimation.None;
+            }
             switch (enumSpawnAnimation)
             {
                 case EnumSpawnAnimation.None:

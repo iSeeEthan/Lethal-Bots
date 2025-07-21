@@ -392,7 +392,7 @@ namespace LethalBots.AI.AIStates
         {
             yield return null;
             while (ai.State != null 
-                && ai.State.GetAIState() == EnumAIStates.MissionControl
+                && ai.State == this
                 && npcController.Npc.inTerminalMenu)
             {
                 // Give the map a chance to update!
@@ -614,7 +614,7 @@ namespace LethalBots.AI.AIStates
         {
             yield return null;
             while (ai.State != null
-                && ai.State.GetAIState() == EnumAIStates.MissionControl
+                && ai.State == this
                 && npcController.Npc.inTerminalMenu 
                 && SignalTranslator != null)
             {

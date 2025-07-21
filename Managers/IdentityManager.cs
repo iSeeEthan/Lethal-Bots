@@ -291,7 +291,7 @@ namespace LethalBots.Managers
     /// <summary>
     /// A subclass representing the statistics of a bot at the end of a round.
     /// </summary>
-    public class EndOfGameBotStats
+    public sealed class EndOfGameBotStats
     {
         public LethalBotIdentity Identity { get; set; }
         public PlayerControllerB BotController { get; set; }
