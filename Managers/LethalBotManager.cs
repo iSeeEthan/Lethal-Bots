@@ -1538,7 +1538,7 @@ namespace LethalBots.Managers
         public void SendNewPlayerCountServerRpc(int numConnectedPlayers, int numLivingPlayers, int numRealPlayers, ServerRpcParams rpcParams = default)
         {
             // Allow only the host to update these values
-            if (!IsServer && !IsHost)
+            if (rpcParams.Receive.SenderClientId != NetworkManager.ServerClientId)
             {
                 Plugin.LogWarning($"Unauthorized client {rpcParams.Receive.SenderClientId} attempted to update player counts!");
                 return;
