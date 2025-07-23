@@ -125,6 +125,24 @@ namespace LethalBots.Patches.ObjectsPatches
             return codes.AsEnumerable();
         }
 
+        /// <summary>
+        /// Patch to clean up <see cref="DeadBodyInfoMonitor"/>'s that are no longer needed.
+        /// </summary>
+        /// <remarks>
+        /// Although <see cref="ConditionalWeakTable{TKey, TValue}"/> can clean this for us,
+        /// it will only clean the table if nothing refrences the key anymore.
+        /// </remarks>
+        /// <param name="__instance"></param>
+        [HarmonyPatch("OnDestroy")]
+        [HarmonyPostfix]
+        private static void OnDestroy_Postfix(DeadBodyInfo __instance)
+        {
+            if (lethalBotDeadBodyInfoMonitor.TryGetValue(__instance, out _))
+            {
+                lethalBotDeadBodyInfoMonitor.Remove(__instance);
+            }
+        }
+
         private class DeadBodyInfoMonitor
         {
             public Dictionary<LethalBotAI, bool> lethalBotAIs = new Dictionary<LethalBotAI, bool>();

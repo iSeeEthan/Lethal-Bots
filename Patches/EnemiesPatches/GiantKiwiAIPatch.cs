@@ -90,6 +90,24 @@ namespace LethalBots.Patches.EnemiesPatches
             }
         }
 
+        /// <summary>
+        /// Patch to clean up <see cref="GiantKiwiPlayerMonitor"/>'s that are no longer needed.
+        /// </summary>
+        /// <remarks>
+        /// Although <see cref="ConditionalWeakTable{TKey, TValue}"/> can clean this for us,
+        /// it will only clean the table if nothing refrences the key anymore.
+        /// </remarks>
+        /// <param name="__instance"></param>
+        [HarmonyPatch("OnDestroy")]
+        [HarmonyPostfix]
+        private static void OnDestroy_Postfix(GiantKiwiAI __instance)
+        {
+            if (lethalBotGiantKiwiMonitor.TryGetValue(__instance, out _))
+            {
+                lethalBotGiantKiwiMonitor.Remove(__instance);
+            }
+        }
+
         private class GiantKiwiPlayerMonitor
         {
             public Dictionary<LethalBotAI, float> lethalBotAIs = new Dictionary<LethalBotAI, float>();
