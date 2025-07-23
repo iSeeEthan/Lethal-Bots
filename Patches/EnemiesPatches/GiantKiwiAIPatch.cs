@@ -94,6 +94,7 @@ namespace LethalBots.Patches.EnemiesPatches
         {
             public Dictionary<LethalBotAI, float> lethalBotAIs = new Dictionary<LethalBotAI, float>();
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void UpdateTimeSinceHittingBot(LethalBotAI bot)
             {
                 lethalBotAIs[bot] = Time.timeSinceLevelLoad;

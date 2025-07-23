@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using GameNetcodeStuff;
+using HarmonyLib;
 using LethalBots.AI;
 using LethalBots.Managers;
 using LethalBots.Utils;
@@ -6,6 +7,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace LethalBots.Patches.ObjectsPatches
 {
@@ -15,20 +18,63 @@ namespace LethalBots.Patches.ObjectsPatches
     [HarmonyPatch(typeof(DeadBodyInfo))]
     public class DeadBodyInfoPatch
     {
-        /*[HarmonyPatch("DetectIfSeenByLocalPlayer")]
-        [HarmonyPrefix]
-        static bool DetectIfSeenByLocalPlayer_PreFix(DeadBodyInfo __instance)
-        {
-            LethalBotAI? internAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerObjectId);
-            if (internAI != null
-                && internAI.RagdollInternBody != null
-                && internAI.RagdollInternBody.GetDeadBodyInfo() == __instance)
-            {
-                return false;
-            }
+        // Conditional Weak Table since when the DeadBodyInfo is removed, the table automatically cleans itself!
+        private static ConditionalWeakTable<DeadBodyInfo, DeadBodyInfoMonitor> lethalBotDeadBodyInfoMonitor = new ConditionalWeakTable<DeadBodyInfo, DeadBodyInfoMonitor>();
 
-            return true;
-        }*/
+        /// <summary>
+        /// Helper function that retrieves the <see cref="DeadBodyInfoMonitor"/>
+        /// for the given <see cref="DeadBodyInfo"/>
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns>The <see cref="DeadBodyInfoMonitor"/> associated with the given <see cref="DeadBodyInfo"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static DeadBodyInfoMonitor GetOrCreateMonitor(DeadBodyInfo body)
+        {
+            return lethalBotDeadBodyInfoMonitor.GetOrCreateValue(body);
+        }
+
+        /// <summary>
+        /// Postfix with the sole purpose of making the bots gain fear when seeing a dead body for the first time.
+        /// </summary>
+        /// <param name="__instance"></param>
+        [HarmonyPatch("DetectIfSeenByLocalPlayer")]
+        [HarmonyPostfix]
+        static void DetectIfSeenByLocalPlayer_PostFix(DeadBodyInfo __instance)
+        {
+            DeadBodyInfoMonitor deadBodyInfoMonitor = GetOrCreateMonitor(__instance);
+            LethalBotAI[] lethalBotAIs = LethalBotManager.Instance.GetLethalBotsAIOwnedByLocal();
+            foreach (LethalBotAI lethalBotAI in lethalBotAIs)
+            {
+                PlayerControllerB? lethalBotController = lethalBotAI.NpcController.Npc;
+                if (lethalBotController != null 
+                    && !deadBodyInfoMonitor.HasBotSeenBody(lethalBotAI))
+                {
+                    Rigidbody? rigidbody = null;
+                    float num = Vector3.Distance(lethalBotController.gameplayCamera.transform.position, __instance.transform.position);
+                    foreach (Rigidbody tempRigidBody in __instance.bodyParts)
+                    {
+                        if (rigidbody == tempRigidBody)
+                        {
+                            continue;
+                        }
+                        rigidbody = tempRigidBody;
+                        if (lethalBotController.HasLineOfSightToPosition(rigidbody.transform.position, 30f / (num / 5f)))
+                        {
+                            if (num < 10f)
+                            {
+                                lethalBotController.JumpToFearLevel(0.9f);
+                            }
+                            else
+                            {
+                                lethalBotController.JumpToFearLevel(0.55f);
+                            }
+                            deadBodyInfoMonitor.SetBotSeenBody(lethalBotAI);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Patch for assigning right tag to a dead body for not getting debug logs of errors
@@ -77,6 +123,23 @@ namespace LethalBots.Patches.ObjectsPatches
 
             // ----------------------------------------------------------------------
             return codes.AsEnumerable();
+        }
+
+        private class DeadBodyInfoMonitor
+        {
+            public Dictionary<LethalBotAI, bool> lethalBotAIs = new Dictionary<LethalBotAI, bool>();
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void SetBotSeenBody(LethalBotAI bot)
+            {
+                lethalBotAIs[bot] = true;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool HasBotSeenBody(LethalBotAI bot)
+            {
+                return lethalBotAIs.GetValueOrDefault(bot, false);
+            }
         }
     }
 }
