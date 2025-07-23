@@ -26,6 +26,7 @@ namespace LethalBots.AI
     {
         public PlayerControllerB Npc { get; set; } = null!;
 
+        // TODO: Create patches to PlayerPhysicsRegion to make them work with the bots
         public List<PlayerPhysicsRegion> CurrentLethalBotPhysicsRegions = new List<PlayerPhysicsRegion>();
 
         public bool HasToMove { private set; get; }
