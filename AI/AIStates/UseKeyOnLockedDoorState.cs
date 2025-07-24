@@ -208,7 +208,7 @@ namespace LethalBots.AI.AIStates
                     if (heldItem != null && heldItem is not KeyItem && heldItem is not LockPicker && heldItem.itemProperties.twoHanded)
                     {
                         ai.DropItem();
-                        LethalBotAI.DictJustDroppedItems[heldItem] = 0; //HACKHACK: Since DropItem set the just dropped item timer, we clear it here!
+                        LethalBotAI.DictJustDroppedItems.Remove(heldItem); //HACKHACK: Since DropItem set the just dropped item timer, we clear it here!
                         return;
                     }
                     else if (heldItem == null || (heldItem is not KeyItem && heldItem is not LockPicker))

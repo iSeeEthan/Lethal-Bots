@@ -129,7 +129,7 @@ namespace LethalBots.AI.AIStates
             }
             if (droppedHeldItem != null)
             {
-                LethalBotAI.DictJustDroppedItems[droppedHeldItem] = 0f; //HACKHACK: Since DropItem sets the just dropped item timer, we clear it here!
+                LethalBotAI.DictJustDroppedItems.Remove(droppedHeldItem); //HACKHACK: Since DropItem sets the just dropped item timer, we clear it here!
             }
             base.ChangeBackToPreviousState();
         }

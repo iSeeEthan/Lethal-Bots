@@ -7,6 +7,7 @@ namespace LethalBots.AI.AIStates
     public class ChargeHeldItemState : AIState
     {
         private GrabbableObject? itemToCharge;
+        private bool chargeAllHeldItems;
         public ChargeHeldItemState(AIState oldState, GrabbableObject? itemToCharge, AIState? changeToOnEnd = null) : base(oldState, changeToOnEnd)
         {
             CurrentState = EnumAIStates.ChargeHeldItem;
@@ -18,6 +19,13 @@ namespace LethalBots.AI.AIStates
             {
                 this.itemToCharge = ai.HeldItem;
             }
+        }
+
+        public ChargeHeldItemState(AIState oldState, bool chargeAllHeldItems = false, AIState? changeToOnEnd = null) : base(oldState, changeToOnEnd)
+        {
+            CurrentState = EnumAIStates.ChargeHeldItem;
+            this.chargeAllHeldItems = chargeAllHeldItems;
+            this.itemToCharge = ai.HeldItem;
         }
 
         public ChargeHeldItemState(LethalBotAI ai, GrabbableObject? itemToCharge, AIState? changeToOnEnd = null) : base(ai)
@@ -71,7 +79,7 @@ namespace LethalBots.AI.AIStates
                         {
                             // We are holding an two handed item, we should drop it!
                             ai.DropItem();
-                            LethalBotAI.DictJustDroppedItems[heldItem] = 0; //HACKHACK: Since DropItem set the just dropped item timer, we clear it here!
+                            LethalBotAI.DictJustDroppedItems.Remove(heldItem); //HACKHACK: Since DropItem set the just dropped item timer, we clear it here!
                             return;
                         }
                         ai.SwitchItemSlotsAndSync(i);
@@ -122,7 +130,7 @@ namespace LethalBots.AI.AIStates
                     }
                 }
             }
-            else
+            else if (!chargeAllHeldItems || !HasItemToCharge(ai, out itemToCharge))
             {
                 // We don't need to charge the item, go back to the previous state!
                 ChangeBackToPreviousState();
@@ -133,6 +141,29 @@ namespace LethalBots.AI.AIStates
         public override void TryPlayCurrentStateVoiceAudio()
         {
             return;
+        }
+
+        /// <summary>
+        /// Static helper function that checks if the bot has something to charge
+        /// </summary>
+        /// <param name="lethalBotAI">The bot of whose inventory we want to check.</param>
+        /// <param name="itemToCharge">The item we found that needs to be charged.</param>
+        /// <returns><see langword="true"/>: we have an item we want to charge, <see langword="false"/>: we didn't find an item to charge.</returns>
+        public static bool HasItemToCharge(LethalBotAI lethalBotAI, out GrabbableObject? itemToCharge)
+        {
+            foreach (var item in lethalBotAI.NpcController.Npc.ItemSlots)
+            {
+                if (item != null && item.itemProperties.requiresBattery
+                && (item.insertedBattery.empty
+                    || item.insertedBattery.charge < 0.9f))
+                {
+                    itemToCharge = item;
+                    return true;
+                }
+            }
+
+            itemToCharge = null;
+            return false;
         }
 
         /// <summary>

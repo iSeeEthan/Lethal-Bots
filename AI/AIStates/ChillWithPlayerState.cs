@@ -75,17 +75,15 @@ namespace LethalBots.AI.AIStates
             if (npcController.Npc.isInHangarShipRoom)
             {
                 // If we are holding an item with a battery, we should charge it!
-                GrabbableObject? heldItem = ai.HeldItem;
-                if (heldItem != null
-                    && heldItem.itemProperties.requiresBattery
-                    && (heldItem.insertedBattery.empty
-                        || heldItem.insertedBattery.charge < 0.9f))
+                if (ChargeHeldItemState.HasItemToCharge(ai, out _))
                 {
-                    ai.State = new ChargeHeldItemState(this, heldItem);
+                    ai.State = new ChargeHeldItemState(this, true);
                     return;
                 }
 
+                // If we are holding an item with a battery, we should charge it!
                 // Bot drop item
+                GrabbableObject? heldItem = ai.HeldItem;
                 if (heldItem != null && (Plugin.Config.DropHeldEquipmentAtShip || heldItem.itemProperties.isScrap))
                 {
                     ai.DropItem();

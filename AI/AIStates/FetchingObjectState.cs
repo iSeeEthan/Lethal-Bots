@@ -67,7 +67,7 @@ namespace LethalBots.AI.AIStates
                     ai.GrabItemServerRpc(this.TargetItem.NetworkObject, itemGiven: false);
                     if (heldItem != null)
                     {
-                        LethalBotAI.DictJustDroppedItems[heldItem] = 0; //HACKHACK: Since DropItem set the just dropped item timer, we clear it here!
+                        LethalBotAI.DictJustDroppedItems.Remove(heldItem); //HACKHACK: Since DropItem set the just dropped item timer, we clear it here!
                         this.TargetItem = heldItem;
                         return;
                     }
