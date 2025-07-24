@@ -35,6 +35,7 @@ namespace LethalBots.Configs
         [SyncedEntryField] public SyncedEntry<bool> ChangeSuitAutoBehaviour;
         [SyncedEntryField] public SyncedEntry<bool> TeleportWhenUsingLadders;
         [SyncedEntryField] public SyncedEntry<bool> SellAllScrapOnShip;
+        [SyncedEntryField] public SyncedEntry<bool> DropHeldEquipmentAtShip;
         [SyncedEntryField] public SyncedEntry<bool> GrabItemsNearEntrances;
         [SyncedEntryField] public SyncedEntry<bool> GrabBeesNest;
         [SyncedEntryField] public SyncedEntry<bool> GrabDeadBodies;
@@ -100,6 +101,11 @@ namespace LethalBots.Configs
                                                "Sell all scrap on ship",
                                                defaultVal: false,
                                                "Should the bot sell all scrap on the ship? If false, bots will use advanced AI to only sell to quota! (NOTE: This is useful if you have a mod such as quota rollover and the like!)");
+
+            DropHeldEquipmentAtShip = cfg.BindSyncedEntry(ConfigConst.ConfigSectionBehaviour,
+                                               "Drop held equipment at ship",
+                                               defaultVal: false,
+                                               "Should the bot drop all equipment its holding when at the ship? If false, bots will hold onto equipment, such as shovels! (NOTE: This doesn't affect bot if it returns to the ship on its own!)");
 
             GrabItemsNearEntrances = cfg.BindSyncedEntry(ConfigConst.ConfigSectionBehaviour,
                                                "Grab items near entrances",

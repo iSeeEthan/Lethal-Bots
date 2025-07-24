@@ -3,6 +3,7 @@ using HarmonyLib;
 using LethalBots.Constants;
 using LethalBots.Enums;
 using LethalBots.Managers;
+using Steamworks.Ugc;
 using UnityEngine;
 
 namespace LethalBots.AI.AIStates
@@ -85,7 +86,7 @@ namespace LethalBots.AI.AIStates
                 }
 
                 // Bot drop item
-                if (heldItem != null)
+                if (heldItem != null && (Plugin.Config.DropHeldEquipmentAtShip || heldItem.itemProperties.isScrap))
                 {
                     ai.DropItem();
                 }
@@ -95,7 +96,8 @@ namespace LethalBots.AI.AIStates
                 {
                     for (int i = 0; i < npcController.Npc.ItemSlots.Length; i++)
                     {
-                        if (npcController.Npc.ItemSlots[i] != null)
+                        var item = npcController.Npc.ItemSlots[i];
+                        if (item != null && (Plugin.Config.DropHeldEquipmentAtShip || item.itemProperties.isScrap))
                         {
                             ai.SwitchItemSlotsAndSync(i);
                             break;
