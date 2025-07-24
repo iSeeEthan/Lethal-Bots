@@ -61,7 +61,7 @@ namespace LethalBots.AI.AIStates
             if (npcController.Npc.isInHangarShipRoom)
             {
                 // Bot drop item
-                PlayerControllerB? missionController = LethalBotManager.missionControlPlayer;
+                PlayerControllerB? missionController = LethalBotManager.Instance.MissionControlPlayer;
                 if (!ai.AreHandsFree())
                 {
                     ai.DropItem();
@@ -89,8 +89,7 @@ namespace LethalBots.AI.AIStates
                 {
                     if (missionController == null || !missionController.isPlayerControlled || missionController.isPlayerDead)
                     {
-                        LethalBotManager.missionControlPlayer = npcController.Npc;
-                        LethalBotManager.Instance.SetMissionControllerAndSync(npcController.Npc.NetworkObject);
+                        LethalBotManager.Instance.MissionControlPlayer = npcController.Npc;
                     }
                 }
             }

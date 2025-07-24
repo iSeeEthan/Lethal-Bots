@@ -113,9 +113,39 @@ namespace LethalBots.Managers
         /// <summary>
         /// This is the human player or bot who is set to stay and monitor the others on the ship!
         /// </summary>
-        public static PlayerControllerB? missionControlPlayer = null;
+        /// <remarks>
+        /// WARNING: If the value is set on a client (not the host), please wait a short time before
+        /// accessing the stored value, as it must be sent to the server and synced back.
+        /// This does NOT apply when running as the host, since the host acts as the server.
+        /// </remarks>
+        public PlayerControllerB? MissionControlPlayer
+        {
+            set
+            {
+                if (value != null)
+                {
+                    SetMissionControllerAndSync(value);
+                }
+                else
+                {
+                    SetMissionControllerAndSync(default);
+                }
+            }
+            get
+            {
+                if (_missionControlPlayer.Value.TryGet(out PlayerControllerB player))
+                {
+                    return player;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+        private NetworkVariable<NetworkBehaviourReference> _missionControlPlayer = new NetworkVariable<NetworkBehaviourReference>(writePerm: NetworkVariableWritePermission.Server);
         /// <summary>
-        /// This is the last reported time of day from the last <see cref="missionControlPlayer"/>.
+        /// This is the last reported time of day from the last <see cref="MissionControlPlayer"/>.
         /// </summary>
         public static DayMode lastReportedTimeOfDay = DayMode.Dawn;
         public static DepositItemsDesk? _companyDesk;
@@ -2326,7 +2356,10 @@ namespace LethalBots.Managers
 
             // Clear the mission controller bot!
             // No need for an RPC here since this is called for all players!
-            ClearMissionController();
+            if (IsServer || IsHost)
+            {
+                MissionControlPlayer = null;
+            }
             SetLastReportedTimeOfDay(DayMode.Dawn);
 
             if (preRevive)
@@ -2944,11 +2977,11 @@ namespace LethalBots.Managers
         /// Set the mission controller on all clients
         /// </summary>
         /// <param name="playerToSync"></param>
-        public void SetMissionControllerAndSync(NetworkObjectReference playerToSync)
+        public void SetMissionControllerAndSync(NetworkBehaviourReference playerToSync)
         {
             if (base.IsServer)
             {
-                SetMissionControllerClientRpc(playerToSync); // Sync to clients
+                _missionControlPlayer.Value = playerToSync; // Sync to clients
             }
             else
             {
@@ -2957,68 +2990,11 @@ namespace LethalBots.Managers
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void SetMissionControllerServerRpc(NetworkObjectReference playerToSync)
+        private void SetMissionControllerServerRpc(NetworkBehaviourReference playerToSync)
         {
             // Sync the mission control player across clients
-            SetMissionControllerClientRpc(playerToSync);
-        }
-
-        [ClientRpc]
-        private void SetMissionControllerClientRpc(NetworkObjectReference playerToSync)
-        {
-            ApplyNewMissionController(playerToSync);
-        }
-
-        private void ApplyNewMissionController(NetworkObjectReference playerToSync)
-        {
-            // Try to get the NetworkObject from the reference
-            if (playerToSync.TryGet(out NetworkObject player))
-            {
-                missionControlPlayer = player.GetComponent<PlayerControllerB>();
-            }
-            else
-            {
-                // If the reference is invaild, clear the mission control player
-                missionControlPlayer = null;
-            }
-        }
-
-        /// <summary>
-        /// Clear the mission controller on all clients
-        /// </summary>
-        public void ClearMissionControllerSync()
-        {
-            if (base.IsServer)
-            {
-                ClearMissionControllerClientRpc(); // Sync to clients
-            }
-            else
-            {
-                ClearMissionControllerServerRpc(); // Request server to clear and sync
-            }
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void ClearMissionControllerServerRpc()
-        {
-            // Clear the mission control player on clients
-            ClearMissionControllerClientRpc();
-        }
-
-        [ClientRpc]
-        private void ClearMissionControllerClientRpc()
-        {
-            // Clear the mission control player reference
-            ClearMissionController();
-        }
-
-        /// <summary>
-        /// Sets <see cref="missionControlPlayer"/> to null
-        /// </summary>
-        private void ClearMissionController()
-        {
-            // Clear the mission control player reference
-            missionControlPlayer = null;
+            // NOTE: We should be the server here!
+            SetMissionControllerAndSync(playerToSync);
         }
 
         #endregion

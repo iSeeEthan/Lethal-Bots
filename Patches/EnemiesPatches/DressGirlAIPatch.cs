@@ -97,28 +97,30 @@ namespace LethalBots.Patches.EnemiesPatches
                     break;
                 }
             }
+            // I have been thinking about this and it may be better to insert a branch here and
+            // go around the statement rather than edit the call itself.
             if (startIndex > -1)
             {
+                // Insert a conditional branch (if hauntingPlayer != localPlayer skip calling SetDiageticMixerSnapshot)
+                Label skipSnapshot = generator.DefineLabel();
+
                 // Remove old SetDiageticMixerSnapshot call
-                codes.RemoveRange(startIndex, 4);
+                //codes.RemoveRange(startIndex, 4);
 
                 // Insert new method call for this.hauntingPlayer == GameNetworkManager.Instance.localPlayerController ? 1 : 0
                 List<CodeInstruction> codesToAdd = new List<CodeInstruction>
                 {
-                    new CodeInstruction(OpCodes.Call, getSoundManagerInstance), // SoundManager.Instance
                     new CodeInstruction(OpCodes.Ldarg_0), // DressGirlAI instance
                     new CodeInstruction(OpCodes.Ldfld, hauntingPlayer), // DressGirlAI.hauntingPlayer
                     new CodeInstruction(OpCodes.Call, getGameNetworkManagerInstance), // GameNetworkManager.Instance
                     new CodeInstruction(OpCodes.Ldfld, localPlayerControllerField), // GameNetworkManager.Instance.localPlayerController
                     new CodeInstruction(OpCodes.Ceq), // Compare ==
-                    // ternary result: if equal -> 1 else 0
-                    // (Ceq leaves 1 for equal, 0 for not equal, so it’s ready)
-                    new CodeInstruction(OpCodes.Ldc_R4, 1f), // push float 1f
-                    new CodeInstruction(OpCodes.Call, setDiageticMixerSnapshotMethod) // call SoundManager.SetDiageticMixerSnapshot(int, float)
+                    new CodeInstruction(OpCodes.Brfalse, skipSnapshot) // Branch if not equal (skip call)
                 };
 
                 // Insert our new instructions
                 codes.InsertRange(startIndex, codesToAdd);
+                codes[startIndex + codesToAdd.Count].labels.Add(skipSnapshot);
             }
             else
             {

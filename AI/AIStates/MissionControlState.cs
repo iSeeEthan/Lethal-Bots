@@ -27,7 +27,7 @@ namespace LethalBots.AI.AIStates
         private bool playerRequestLeave; // This is used when a human player requests the bot to pull the ship lever!
         private bool playerRequestedTerminal; // This is used when a human player requests to use the terminal!
         private float waitForTerminalTime; // This is used to wait for the terminal to be free
-        private bool targetPlayerUpdated; // This tells the signal translator courutine the targeted player has updated!
+        private bool targetPlayerUpdated; // This tells the signal translator coroutine the targeted player has updated!
         private WalkieTalkie? walkieTalkie; // This is the walkie-talkie we want to have in our inventory
         private PlayerControllerB? targetedPlayer; // This is the current player on the monitor based on last vision update
         private PlayerControllerB? monitoredPlayer; // This is the player we want to be monitoring
@@ -42,11 +42,11 @@ namespace LethalBots.AI.AIStates
         private Queue<string> messageQueue = new Queue<string>();
         private static readonly FieldInfo isDoorOpen = AccessTools.Field(typeof(TerminalAccessibleObject), "isDoorOpen");
         private static readonly FieldInfo inCooldown = AccessTools.Field(typeof(TerminalAccessibleObject), "inCooldown");
-        private ShipTeleporter? _shipTeleporter;
-        private ShipTeleporter? ShipTeleporter 
+        private static ShipTeleporter? _shipTeleporter;
+        private static ShipTeleporter? ShipTeleporter
         {
             get
-            { 
+            {
                 if (_shipTeleporter == null)
                 {
                     _shipTeleporter = FindTeleporter();
@@ -54,8 +54,8 @@ namespace LethalBots.AI.AIStates
                 return _shipTeleporter;
             }
         }
-        private SignalTranslator? _signalTranslator;
-        private SignalTranslator? SignalTranslator
+        private static SignalTranslator? _signalTranslator;
+        private static SignalTranslator? SignalTranslator
         {
             get
             {
@@ -64,6 +64,18 @@ namespace LethalBots.AI.AIStates
                     _signalTranslator = UnityEngine.Object.FindObjectOfType<SignalTranslator>();
                 }
                 return _signalTranslator;
+            }
+        }
+        private static ShipAlarmCord? _shipHorn;
+        private static ShipAlarmCord? ShipHorn
+        {
+            get
+            {
+                if (_shipHorn == null)
+                {
+                    _shipHorn = UnityEngine.Object.FindAnyObjectByType<ShipAlarmCord>();
+                }
+                return _shipHorn;
             }
         }
 
@@ -76,10 +88,10 @@ namespace LethalBots.AI.AIStates
         {
             if (!hasBeenStarted)
             {
-                if (LethalBotManager.missionControlPlayer == null)
+                PlayerControllerB? missionController = LethalBotManager.Instance.MissionControlPlayer;
+                if (missionController == null || !missionController.isPlayerControlled || missionController.isPlayerDead)
                 {
-                    LethalBotManager.missionControlPlayer = npcController.Npc;
-                    LethalBotManager.Instance.SetMissionControllerAndSync(npcController.Npc.NetworkObject);
+                    LethalBotManager.Instance.MissionControlPlayer = npcController.Npc;
                 }
                 // Might not need this as we moved this to a synced version up in bot manager
                 /*TimeOfDay timeOfDay = TimeOfDay.Instance;
@@ -100,7 +112,7 @@ namespace LethalBots.AI.AIStates
         public override void DoAI()
         {
             // If we are not the mission controller or the ship is leaving, we should not be in this state
-            if (LethalBotManager.missionControlPlayer != npcController.Npc 
+            if (LethalBotManager.Instance.MissionControlPlayer != npcController.Npc 
                 || StartOfRound.Instance.shipIsLeaving)
             {
                 if (npcController.Npc.inTerminalMenu)
@@ -109,8 +121,7 @@ namespace LethalBots.AI.AIStates
                 }
                 if (StartOfRound.Instance.shipIsLeaving)
                 {
-                    LethalBotManager.missionControlPlayer = null;
-                    LethalBotManager.Instance.ClearMissionControllerSync();
+                    LethalBotManager.Instance.MissionControlPlayer = null;
                 }
                 ai.State = new ChillAtShipState(this);
                 return;
@@ -370,7 +381,7 @@ namespace LethalBots.AI.AIStates
             StopUsingSignalTranslator();
         }
 
-        private ShipTeleporter? FindTeleporter()
+        private static ShipTeleporter? FindTeleporter()
         {
             ShipTeleporter[] shipTeleporters = Object.FindObjectsOfType<ShipTeleporter>(includeInactive: false);
             foreach (var teleporter in shipTeleporters)
