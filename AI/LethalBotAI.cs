@@ -274,9 +274,6 @@ namespace LethalBots.AI
             // Init controller
             this.NpcController.Awake();
 
-            // Refresh billboard position
-            StartCoroutine(Wait2EndOfFrameToRefreshBillBoard());
-
             // Health
             MaxHealth = LethalBotIdentity.HpMax;
             NpcController.Npc.health = MaxHealth;
@@ -7241,6 +7238,10 @@ namespace LethalBots.AI
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
             yield return null;
+
+            // Refresh billboard position
+            StartCoroutine(Wait2EndOfFrameToRefreshBillBoard());
+
             if (!IsOwner)
             {
                 spawnAnimationCoroutine = null;
@@ -7261,6 +7262,9 @@ namespace LethalBots.AI
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
             yield return null;
+
+            // Refresh billboard position
+            StartCoroutine(Wait2EndOfFrameToRefreshBillBoard());
 
             if (!IsOwner)
             {
