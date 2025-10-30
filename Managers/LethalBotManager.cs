@@ -1146,7 +1146,7 @@ namespace LethalBots.Managers
                 {
                     Plugin.LogDebug($"Bot {lethalBotAI.NpcController.Npc.playerUsername} heard message {message} from {playerWhoSentMessage.playerUsername}!");
                     Plugin.LogDebug($"Bot { (flag ? "does" : "doesn't") } have a walkie-talkie!");
-                    lethalBotAI.State.OnPlayerChatMessageRecevied(message, playerWhoSentMessage);
+                    lethalBotAI.State.OnPlayerChatMessageReceived(message, playerWhoSentMessage);
                 }
             }
         }

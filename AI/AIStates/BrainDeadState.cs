@@ -88,7 +88,7 @@ namespace LethalBots.AI.AIStates
         }
 
         // We are dead, these messages mean nothing to us!
-        public override void OnPlayerChatMessageRecevied(string message, PlayerControllerB playerWhoSentMessage)
+        public override void OnPlayerChatMessageReceived(string message, PlayerControllerB playerWhoSentMessage)
         {
             return;
         }

@@ -384,7 +384,7 @@ namespace LethalBots.AI.AIStates
             base.OnSignalTranslatorMessageReceived(message);
         }
 
-        public override void OnPlayerChatMessageRecevied(string message, PlayerControllerB playerWhoSentMessage)
+        public override void OnPlayerChatMessageReceived(string message, PlayerControllerB playerWhoSentMessage)
         {
             if (message.Contains("jester"))
             {
@@ -412,7 +412,7 @@ namespace LethalBots.AI.AIStates
                     return;
                 }
             }
-            base.OnPlayerChatMessageRecevied(message, playerWhoSentMessage);
+            base.OnPlayerChatMessageReceived(message, playerWhoSentMessage);
         }
 
         public override bool? ShouldBotCrouch()

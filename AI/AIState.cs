@@ -242,15 +242,16 @@ namespace LethalBots.AI
         }
 
         /// <summary>
-        /// Called when the bot recevies a chat message. This can be from a player or bot!
+        /// Called when the bot receives a chat message. This can be from a player or bot!
         /// You can use <see cref="Managers.LethalBotManager.IsPlayerLethalBot(PlayerControllerB)"/> to check who is a bot or not!
         /// </summary>
         /// <remarks>
-        /// WARNING: All messages are forced into lower case!
+        /// WARNING: All messages are forced into lower case!</br>
+        /// NOTE: This is not called for messages sent by the bot itself!
         /// </remarks>
-        /// <param name="message"></param>
-        /// <param name="playerWhoSentMessage"></param>
-        public virtual void OnPlayerChatMessageRecevied(string message, PlayerControllerB playerWhoSentMessage) 
+        /// <param name="message">The message we received</param>
+        /// <param name="playerWhoSentMessage">The player who sent the message!</param>
+        public virtual void OnPlayerChatMessageReceived(string message, PlayerControllerB playerWhoSentMessage) 
         {
             if (message.Contains("jester"))
             {
