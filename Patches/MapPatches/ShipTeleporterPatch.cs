@@ -16,7 +16,7 @@ namespace LethalBots.Patches.MapPatches
         static void SetPlayerTeleporterId_PreFix(PlayerControllerB playerScript,
                                                  int teleporterId)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)playerScript.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(playerScript);
             if (lethalBotAI == null)
             {
                 return;

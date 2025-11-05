@@ -20,7 +20,7 @@ namespace LethalBots.Patches.EnemiesPatches
                 return true;
             }
 
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.inSpecialAnimationWithPlayer.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance.inSpecialAnimationWithPlayer);
             if (lethalBotAI == null)
             {
                 return true;
@@ -104,7 +104,7 @@ namespace LethalBots.Patches.EnemiesPatches
                 return;
             }
 
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.inSpecialAnimationWithPlayer.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance.inSpecialAnimationWithPlayer);
             if (lethalBotAI == null)
             {
                 return;

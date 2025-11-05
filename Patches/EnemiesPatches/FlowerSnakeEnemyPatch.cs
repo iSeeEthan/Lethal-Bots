@@ -84,7 +84,7 @@ namespace LethalBots.Patches.EnemiesPatches
                 return;
             }
 
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.clingingToPlayer.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance.clingingToPlayer);
             if (lethalBotAI == null)
             {
                 return;

@@ -52,7 +52,7 @@ namespace LethalBots.Patches.NpcPatches
                                   ref float ___updatePlayerLookInterval,
                                   ref float ___bloodDropTimer)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI == null)
             {
                 return true;
@@ -113,7 +113,7 @@ namespace LethalBots.Patches.NpcPatches
                                       ref float ___limpMultiplier,
                                       int ___playerMask)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI != null)
             {
                 lethalBotAI.NpcController.IsWalking = ___isWalking;
@@ -143,7 +143,7 @@ namespace LethalBots.Patches.NpcPatches
         [HarmonyPrefix]
         static bool Awake_PreFix(PlayerControllerB __instance)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI != null)
             {
                 return false;
@@ -166,7 +166,7 @@ namespace LethalBots.Patches.NpcPatches
                                         bool fallDamage = false,
                                         Vector3 force = default(Vector3))
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI != null)
             {
                 Plugin.LogDebug($"SyncDamageLethalBot called from game code on LOCAL client #{lethalBotAI.NetworkManager.LocalClientId}, lethalBot object: Bot #{lethalBotAI.BotId}");
@@ -269,7 +269,7 @@ namespace LethalBots.Patches.NpcPatches
                                       Vector3 positionOffset = default(Vector3))
         {
             // Try to kill an lethalBot ?
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI != null)
             {
                 Plugin.LogDebug($"SyncKillLethalBot called from game code on LOCAL client #{lethalBotAI.NetworkManager.LocalClientId}, Bot #{lethalBotAI.BotId}");
@@ -500,7 +500,7 @@ namespace LethalBots.Patches.NpcPatches
         static bool UpdateSpecialAnimationValue_PreFix(PlayerControllerB __instance,
                                                        bool specialAnimation, float timed, bool climbingLadder)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI != null)
             {
                 lethalBotAI.UpdateLethalBotSpecialAnimationValue(specialAnimation, timed, climbingLadder);
@@ -590,7 +590,7 @@ namespace LethalBots.Patches.NpcPatches
         static bool SyncBodyPositionClientRpc_PreFix(PlayerControllerB __instance, Vector3 newBodyPosition)
         {
             // send to server if lethalBot from controller
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI != null)
             {
                 Plugin.LogDebug($"NetworkManager {__instance.NetworkManager}, newBodyPosition {newBodyPosition}, this.deadBody {__instance.deadBody}");
@@ -610,7 +610,7 @@ namespace LethalBots.Patches.NpcPatches
         [HarmonyPrefix]
         static bool PlayerHitGroundEffects_PreFix(PlayerControllerB __instance)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI != null)
             {
                 PlayerHitGroundEffects_ReversePatch(__instance);
@@ -668,7 +668,7 @@ namespace LethalBots.Patches.NpcPatches
         [HarmonyPrefix]
         static bool PerformEmote_PreFix(PlayerControllerB __instance, int emoteID)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(_instance);
             if (lethalBotAI == null)
             {
                 return true;
@@ -695,7 +695,7 @@ namespace LethalBots.Patches.NpcPatches
         [HarmonyPrefix]
         static bool StartPerformingEmoteServerRpc_PreFix(PlayerControllerB __instance)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI == null)
             {
                 return true;
@@ -709,7 +709,7 @@ namespace LethalBots.Patches.NpcPatches
         [HarmonyPrefix]
         static bool ConnectClientToPlayerObject_PreFix(PlayerControllerB __instance)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)__instance.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI != null)
             {
                 return false;
@@ -1111,7 +1111,7 @@ namespace LethalBots.Patches.NpcPatches
                     continue;
                 }
 
-                LethalBotAI? lethalBot = LethalBotManager.Instance.GetLethalBotAI((int)lethalBotController.playerClientId);
+                LethalBotAI? lethalBot = LethalBotManager.Instance.GetLethalBotAI(lethalBotController);
                 if (lethalBot == null)
                 {
                     continue;

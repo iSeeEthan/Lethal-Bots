@@ -42,6 +42,7 @@ namespace LethalBots.AI.AIStates
                 return;
             }
 
+            // TODO: Implement a way for bots to sit in the passenger seat!
             Vector3 entryPointLethalBotCruiser = vehicleController.transform.position + vehicleController.transform.rotation * GetNextRandomEntryPosCruiser();
 
             if (npcController.IsControllerInCruiser)

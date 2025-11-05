@@ -18,7 +18,7 @@ namespace LethalBots.Patches.ModPatches.ModelRplcmntAPI
         [HarmonyPrefix]
         static bool SetPlayerModelReplacement_Prefix(PlayerControllerB player, Type type)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)player.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(player);
             if (lethalBotAI == null)
             {
                 return true;

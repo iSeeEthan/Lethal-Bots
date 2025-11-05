@@ -14,7 +14,7 @@ namespace LethalBots.Patches.ModPatches.LethalPhones
         [HarmonyPrefix]
         static bool UpdatePhoneSanity_PreFix(PlayerControllerB playerController)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI((int)playerController.playerClientId);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(playerController);
             if (lethalBotAI != null)
             {
                 return false;
