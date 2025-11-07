@@ -668,7 +668,7 @@ namespace LethalBots.Patches.NpcPatches
         [HarmonyPrefix]
         static bool PerformEmote_PreFix(PlayerControllerB __instance, int emoteID)
         {
-            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(_instance);
+            LethalBotAI? lethalBotAI = LethalBotManager.Instance.GetLethalBotAI(__instance);
             if (lethalBotAI == null)
             {
                 return true;
