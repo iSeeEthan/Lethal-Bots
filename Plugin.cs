@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using Unity.Netcode;
@@ -431,25 +432,28 @@ namespace LethalBots
             PluginManager.Instance.InitManagers();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void LogDebug(string debugLog)
         {
-            if (!Plugin.Config.EnableDebugLog.Value)
+            if (Plugin.Config.EnableDebugLog.Value)
             {
-                return;
+                Logger.LogDebug(debugLog);
             }
-            Logger.LogDebug(debugLog);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void LogInfo(string infoLog)
         {
             Logger.LogInfo(infoLog);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void LogWarning(string warningLog)
         {
             Logger.LogWarning(warningLog);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void LogError(string errorLog)
         {
             Logger.LogError(errorLog);

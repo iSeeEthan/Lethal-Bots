@@ -6,6 +6,7 @@ using LethalBots.Patches.EnemiesPatches;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -62,7 +63,7 @@ namespace LethalBots.AI
         protected EntranceTeleport? targetEntrance = null;
         protected bool hasBeenStarted = false;
         private GameObject? lastStuckNode;
-        private Dictionary<EntranceTeleport, (bool isSafe, float lastSafetyCheck)> entranceSafetyCache = new Dictionary<EntranceTeleport, (bool isSafe, float lastSafetyCheck)>();
+        private static Dictionary<EntranceTeleport, (bool isSafe, float lastSafetyCheck)> entranceSafetyCache = new Dictionary<EntranceTeleport, (bool isSafe, float lastSafetyCheck)>();
 
         /// <summary>
         /// Constructor from another state
@@ -370,7 +371,7 @@ namespace LethalBots.AI
         /// <param name="entrance"></param>
         /// <returns>true: <paramref name="entrance"/> is the front entrance. false: <paramref name="entrance"/> is not the front entrance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsFrontEntrance(EntranceTeleport? entrance)
+        public static bool IsFrontEntrance([NotNullWhen(true)]EntranceTeleport? entrance)
         {
             return entrance != null && entrance.entranceId == 0;
         }
@@ -510,7 +511,7 @@ namespace LethalBots.AI
             Vector3 entrancePoint = useEntrancePoint ? entrance.entrancePoint.position : entrance.exitPoint.position;
             foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies)
             {
-                if (!enemy.isEnemyDead && (enemy.transform.position - entrancePoint).sqrMagnitude < 7.7f * 7.7f)
+                if (!enemy.isEnemyDead && (enemy.transform.position - entrancePoint).sqrMagnitude < 7.7f * 7.7f) // 7.7f is the same distance used by the base game to show the enemy activity nearby message!
                 {
                     // We found an enemy near the exit point, so we should not use this entrance!
                     entranceSafetyCache[entrance] = (false, Time.timeSinceLevelLoad);

@@ -870,6 +870,7 @@ namespace LethalBots.AI
             }
         }
 
+        // FIXME: We should recreate the player push away code rather than this!
 		public override void OnCollideWithPlayer(Collider other)
         {
             if (other.CompareTag("Player"))
@@ -883,6 +884,7 @@ namespace LethalBots.AI
             }
         }
 
+        // FIXME: We should recreate the player push away code rather than this!
         public override void OnCollideWithEnemy(Collider other, EnemyAI collidedEnemy)
         {
             if (!IsOwner)

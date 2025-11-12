@@ -51,12 +51,12 @@ namespace LethalBots.AI.AIStates
 
             // Check if every human player is dead,
             // and if our fellow players and bots are on the ship
-            bool allLivingPlayersOnShip = LethalBotManager.Instance.AreAllPlayersOnTheShip(true);
-            bool allHumanPlayersDead = LethalBotManager.Instance.AreAllHumanPlayersDead(true);
+            bool allLivingPlayersOnShip = LethalBotManager.Instance.AreAllPlayersOnTheShip();
+            bool allHumanPlayersDead = LethalBotManager.Instance.AreAllHumanPlayersDead();
 
             // If the ship is compromised,
             // we should vote to leave if players are on it!
-            bool isShipCompromised = LethalBotManager.IsShipCompromised(ai, true);
+            bool isShipCompromised = LethalBotManager.IsShipCompromised(ai);
 
             // If every human player is dead and all of us are on the ship,
             // we should vote to leave early!

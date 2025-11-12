@@ -1989,7 +1989,7 @@ namespace LethalBots.Managers
         /// </remarks>
         /// <param name="player">The player to test</param>
         /// <returns>true: if there is a valid path, false: if there is no valid path</returns>
-        private bool CanPlayerPathToExit(PlayerControllerB player)
+        public bool CanPlayerPathToExit(PlayerControllerB player)
         {
             // Setup some variables
             Vector3 startPosition = RoundManager.Instance.GetNavMeshPosition(player.transform.position, RoundManager.Instance.navHit, 2.7f);
@@ -2019,15 +2019,15 @@ namespace LethalBots.Managers
         /// Helper function that checks if we can path to the main entrance!
         /// </summary>
         /// <param name="startPosition"></param>
-        /// <param name="exitPosition"></param>
+        /// <param name="entrancePosition"></param>
         /// <param name="areaMask"></param>
         /// <param name="path"></param>
         /// <param name="targetEntrance"></param>
         /// <returns></returns>
-        private bool IsValidPathToEntrance(Vector3 startPosition, Vector3 exitPosition, int areaMask, ref NavMeshPath path, EntranceTeleport targetEntrance)
+        public static bool IsValidPathToEntrance(Vector3 startPosition, Vector3 entrancePosition, int areaMask, ref NavMeshPath path, EntranceTeleport targetEntrance)
         {
             // Check if we can path to the entrance!
-            if (!LethalBotAI.IsValidPathToTarget(startPosition, exitPosition, areaMask, ref path))
+            if (!LethalBotAI.IsValidPathToTarget(startPosition, entrancePosition, areaMask, ref path))
             {
                 // Check if this is the front entrance if we need to use an elevator
                 if (AIState.IsFrontEntrance(targetEntrance) && LethalBotAI.ElevatorScript != null)
