@@ -833,6 +833,8 @@ namespace LethalBots.AI.AIStates
                     return "Dog";
                 case "RadMech":
                     return "Old Bird";
+                case "Bunker Spider":
+                    return "Spider";
                 default:
                     return defaultName;
             }

@@ -392,7 +392,6 @@ namespace LethalBots.Managers
 
             // Static value threats
             RegisterThreat("Crawler", 20f, 10f, 20f);
-            RegisterThreat("Bunker Spider", 20f, 10f, 20f);
             RegisterThreat("ForestGiant", 30f, 10f, 40f);
             RegisterThreat("Earth Leviathan", 10f, null, 15f);
             RegisterThreat("Nutcracker", 15f, 10f, 15f);
@@ -483,6 +482,12 @@ namespace LethalBots.Managers
                 }
             );
 
+            RegisterThreat("Bunker Spider", 
+                fq => fq.EnemyAI.currentBehaviourStateIndex == 2 ? 20f : null, // Sigh, i may or may not of added this after a particular experience where bots got stuck in a loop of running away and coming back despite the spider not actually chasing them!
+                fq => fq.EnemyAI.currentBehaviourStateIndex == 2 ? 10f : null, 
+                _ => 20f // Always 20 for pathfinding
+            );
+
             // TODO: Improve this as I study the AI!
             RegisterThreat("GiantKiwi", 
                 fq => fq.EnemyAI.currentBehaviourStateIndex > 0 ? 30f : null, 
@@ -497,7 +502,7 @@ namespace LethalBots.Managers
             //     _ => null   // No value for pathfinding
             // );
 
-            // Girl is always ignored (for now), so skip or:
+            // Girl aka Ghost Girl is always ignored (for now), so skip or:
             RegisterThreat("Girl", (float?)null, (float?)null, (float?)null);
         }
 
