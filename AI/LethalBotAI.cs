@@ -4372,6 +4372,17 @@ namespace LethalBots.AI
                 }
             }
 
+            // Giant Kiwi/Sapsucker eggs
+            if (!isSelling && grabbableObjectToEvaluate is KiwiBabyItem egg)
+            {
+                GiantKiwiAI giantKiwiAI = egg.mamaAI;
+                if (giantKiwiAI == null || giantKiwiAI.isEnemyDead)
+                {
+                    return true; // Parent is dead, allow pickup
+                }
+                return false; // Don't allow pickup if parent is alive
+            }
+
             // Wheelbarrow
             if ((!Plugin.Config.GrabWheelbarrow.Value || isSelling)
                 && gameObject.name.Contains("Wheelbarrow"))
