@@ -829,6 +829,7 @@ namespace LethalBots.AI
                 }
 
                 // FIXME: This relies on Elucian Distance rather than travel distance, this should be fixed!
+                // TODO: We should use the same system the retreat system uses, should fix those cases where the bot believes there is no safe path when there actually is one!
                 var nodes = ai.allAINodes.OrderBy(node => (node.transform.position - targetDestination.Value).sqrMagnitude)
                                          .ToArray();
                 yield return null;

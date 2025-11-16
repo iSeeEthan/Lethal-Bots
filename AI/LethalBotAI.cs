@@ -1403,8 +1403,8 @@ namespace LethalBots.AI
         /// <see cref="Task"/> which can be used to check if the path is safe or not.
         /// Please note that you <c>MUST</c> wait until <see cref="Task.IsCompleted"/> is true before you can get the result!
         /// </returns>
-        /// <inheritdoc cref="IsPathDangerousAsync(NavMeshPath, bool, bool, bool, CancellationToken)"/>
-        public Task<(bool isDangerous, float pathDistance)> TryStartPathDangerousAsync(Vector3 targetPos, bool calculatePathDistance = false, bool useEyePosition = true, bool checkForEnemies = true, CancellationToken token = default)
+        /// <inheritdoc cref="IsPathDangerousAsync(NavMeshPath, bool, bool, bool, bool, CancellationToken)"/>
+        public Task<(bool isDangerous, float pathDistance)> TryStartPathDangerousAsync(Vector3 targetPos, bool calculatePathDistance = false, bool useEyePosition = true, bool checkForEnemies = true, bool checkForQuicksand = true, CancellationToken token = default)
         {
             // Check if we were canceled before pathfinding!  
             if (token.IsCancellationRequested)
@@ -1427,7 +1427,7 @@ namespace LethalBots.AI
             }
 
             Plugin.LogDebug($"Path found to target {targetPos}. Checking for danger...");
-            return IsPathDangerousAsync(ourPath, calculatePathDistance, useEyePosition, checkForEnemies, token);
+            return IsPathDangerousAsync(ourPath, calculatePathDistance, useEyePosition, checkForEnemies, checkForQuicksand, token);
         }
 
         /// <summary>
@@ -1444,9 +1444,10 @@ namespace LethalBots.AI
         /// <param name="calculatePathDistance">Should this update the <see cref="EnemyAI.pathDistance"/> once we finish?</param>
         /// <param name="useEyePosition">Should we use the eye position of an enemy rather than their position when checking if the path is dangerous</param>
         /// <param name="checkForEnemies">Should we check the path can be seen by enemies</param>
+        /// <param name="checkForQuicksand">Should we check for quicksand and water on the path</param>
         /// <param name="token">The cancelation token, this allows you to stop the function early!</param>
         /// <returns>Task indicating if the path is safe or not</returns>
-        private async Task<(bool isDangerous, float pathDistance)> IsPathDangerousAsync(NavMeshPath ourPath, bool calculatePathDistance = false, bool useEyePosition = true, bool checkForEnemies = true, CancellationToken token = default)
+        private async Task<(bool isDangerous, float pathDistance)> IsPathDangerousAsync(NavMeshPath ourPath, bool calculatePathDistance = false, bool useEyePosition = true, bool checkForEnemies = true, bool checkForQuicksand = true, CancellationToken token = default)
         {
             // Check if we were canceled before pathfinding!
             if (token.IsCancellationRequested)
@@ -1534,12 +1535,15 @@ namespace LethalBots.AI
                 }
 
                 // Check for if we walk into quicksand or water
-                var (isDangerous, updatedDrownTimer) = await CheckQuicksandDanger(previousNode, nodePos, headOffset, tempDistance, moveSpeed, predictedDrownTimer, token);
-                predictedDrownTimer = updatedDrownTimer; // Update the global drown timer!
-                if (isDangerous)
+                if (checkForQuicksand)
                 {
-                    Plugin.LogDebug($"Danger detected due to quicksand or water at segment {j}. Path is dangerous!");
-                    return (true, pathDistance);
+                    var (isDangerous, updatedDrownTimer) = await CheckQuicksandDanger(previousNode, nodePos, headOffset, tempDistance, moveSpeed, predictedDrownTimer, token);
+                    predictedDrownTimer = updatedDrownTimer; // Update the global drown timer!
+                    if (isDangerous)
+                    {
+                        Plugin.LogDebug($"Danger detected due to quicksand or water at segment {j}. Path is dangerous!");
+                        return (true, pathDistance);
+                    }
                 }
             }
 
