@@ -593,6 +593,7 @@ namespace LethalBots.AI.AIStates
             Transform enemyTransform = enemy.transform;
             Vector3 enemyPos = enemyTransform.position;
             Vector3 viewPos = enemy.eye?.position ?? enemyPos;
+            viewPos += Vector3.up * 0.2f; // Slightly above eye level to avoid ground clipping issues
             float ourDistanceFromEnemy = (enemyTransform.position - npcController.Npc.transform.position).sqrMagnitude;
             float headOffset = npcController.Npc.gameplayCamera.transform.position.y - npcController.Npc.transform.position.y;
             int maxAsync;
@@ -655,7 +656,7 @@ namespace LethalBots.AI.AIStates
 
                     // Now we test if the node is visible to an enemy!
                     Vector3 simulatedHead = nodePos + Vector3.up * headOffset;
-                    if (!Physics.Linecast(viewPos + Vector3.up * 0.2f, simulatedHead, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
+                    if (!Physics.Linecast(viewPos, simulatedHead, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
                     {
                         nodeSafety.isNodeOutOfSight = false;
                     }
