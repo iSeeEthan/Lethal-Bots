@@ -159,7 +159,7 @@ namespace LethalBots.AI
                 return false;
             }
         }
-        private Dictionary<string, Component> dictComponentByCollider = null!;
+        private Dictionary<Component, BridgeTrigger> dictComponentByCollider = null!;
 
         private Coroutine grabObjectCoroutine = null!;
         private Coroutine? spawnAnimationCoroutine = null;
@@ -769,9 +769,8 @@ namespace LethalBots.AI
             {
                 RaycastHit groundRaycastHit = IsTouchingGroundTimedCheck.GetGroundHit(NpcController.Npc.thisPlayerBody.position);
                 Collider? collider = groundRaycastHit.collider;
-                if (collider != null && dictComponentByCollider.TryGetValue(collider.name, out Component component))
+                if (collider != null && dictComponentByCollider.TryGetValue(collider, out BridgeTrigger bridgeTrigger))
                 {
-                    BridgeTrigger? bridgeTrigger = component as BridgeTrigger;
                     if (bridgeTrigger != null
                         && bridgeTrigger.fallenBridgeColliders.Length > 0
                         && bridgeTrigger.fallenBridgeColliders[0].enabled)
@@ -4439,7 +4438,7 @@ namespace LethalBots.AI
         {
             if (dictComponentByCollider == null)
             {
-                dictComponentByCollider = new Dictionary<string, Component>();
+                dictComponentByCollider = new Dictionary<Component, BridgeTrigger>();
             }
             else
             {
@@ -4457,9 +4456,9 @@ namespace LethalBots.AI
                         continue;
                     }
 
-                    if (!dictComponentByCollider.ContainsKey(component.name))
+                    if (!dictComponentByCollider.ContainsKey(component))
                     {
-                        dictComponentByCollider.Add(component.name, bridge);
+                        dictComponentByCollider.Add(component, bridge);
                     }
                 }
             }
