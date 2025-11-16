@@ -3704,7 +3704,7 @@ namespace LethalBots.AI
             {
                 return false;
             }
-            if (NpcController.Npc.isPlayerDead)
+            if (lethalBotController.isPlayerDead)
             {
                 return false;
             }
