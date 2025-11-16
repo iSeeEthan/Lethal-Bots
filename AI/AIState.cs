@@ -536,8 +536,7 @@ namespace LethalBots.AI
         public bool IsEntranceSafe(EntranceTeleport? entrance, bool useEntrancePoint = false)
         {
             if (entrance == null 
-                || !entrance.FindExitPoint() 
-                || FindNearbyJester() != null)
+                || !entrance.FindExitPoint())
             {
                 return false;
             }
@@ -550,6 +549,14 @@ namespace LethalBots.AI
                 {
                     return cachedSafety.isSafe;
                 }
+            }
+
+            // Active jester is an automatic fail!
+            if (FindNearbyJester() != null)
+            {
+                // If there is a jester nearby, we should not use this entrance!
+                entranceSafetyCache[entrance] = (false, Time.timeSinceLevelLoad);
+                return false;
             }
 
             // If we don't have a cached value, we need to check if the entrance is safe
