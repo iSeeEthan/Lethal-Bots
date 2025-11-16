@@ -227,6 +227,7 @@ T-Rizzle: I have made multiple changes to this from the original addon, unlike L
 - As stated earlier, add TTS to bots so they can be better at relaying information to players.
 
 ## Bugs to fix
+- The game will lag during the inital landing sequence after the bots spawn. I have no idea what causes this, but it fixes itself after the ship lands. This only seems to happen with about 8 or more bots. If you play with the default lobby size of 4 players, you won't see this issue.
 - Sand spider web trap not working for bots. Transpiler or Postfix should work, just need to find out what would be the best option.
 - Snare Fleas ignore bots that walk under them. The cause is that they only check for the Local Client walks under them, a transpiler or postfix can fix this!
 - Nutcracker ignoring bots. The cause of this is known, but I still don't know a good way to fix it yet!
