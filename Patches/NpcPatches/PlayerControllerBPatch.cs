@@ -630,7 +630,7 @@ namespace LethalBots.Patches.NpcPatches
                 lethalBotAI.FearLevelIncreasing.Value = true;
                 if (!(lethalBotAI.FearLevel.Value > cap))
                 {
-                    lethalBotAI.FearLevel.Value += Time.deltaTime;
+                    lethalBotAI.FearLevel.Value += Time.deltaTime * amountMultiplier;
                     if (lethalBotAI.FearLevel.Value > 0.6f && __instance.timeSinceFearLevelUp > 8f)
                     {
                         __instance.timeSinceFearLevelUp = 0f;
