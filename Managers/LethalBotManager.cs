@@ -2085,7 +2085,7 @@ namespace LethalBots.Managers
             if (!LethalBotAI.IsValidPathToTarget(startPosition, entrancePosition, areaMask, ref path))
             {
                 // Check if this is the front entrance if we need to use an elevator
-                if (AIState.IsFrontEntrance(targetEntrance) && LethalBotAI.ElevatorScript != null)
+                if (!targetEntrance.isEntranceToBuilding && AIState.IsFrontEntrance(targetEntrance) && LethalBotAI.ElevatorScript != null)
                 {
                     // Check if we can path to the bottom of the elevator
                     if (LethalBotAI.IsValidPathToTarget(startPosition, LethalBotAI.ElevatorScript.elevatorBottomPoint.position, areaMask, ref path))
