@@ -3168,10 +3168,10 @@ namespace LethalBots.AI
             Vector3 vector = ((!goUp) ? ElevatorScript.elevatorTopPoint.position : ElevatorScript.elevatorBottomPoint.position);
             float distanceFromInsidePosition = Vector3.Distance(NpcController.Npc.transform.position, ElevatorScript.elevatorInsidePoint.position);
             if (ElevatorScript.elevatorFinishedMoving 
-                && (distanceFromInsidePosition <= 1f || IsValidPathToTarget(ElevatorScript.elevatorInsidePoint.position, false)))
+                && (distanceFromInsidePosition <= Const.DISTANCE_CLOSE_ENOUGH_TO_DESTINATION || IsValidPathToTarget(ElevatorScript.elevatorInsidePoint.position, false)))
             {
                 if (ElevatorScript.elevatorDoorOpen 
-                    && distanceFromInsidePosition <= 1f 
+                    && distanceFromInsidePosition <= Const.DISTANCE_CLOSE_ENOUGH_TO_DESTINATION
                     && ElevatorScript.elevatorMovingDown == goUp 
                     && timerElevatorCooldown > Const.TIMER_USE_ELEVATOR
                     && (Time.timeSinceLevelLoad - pressElevatorButtonCooldown) > (AIIntervalTime + 0.16f))
@@ -3182,7 +3182,7 @@ namespace LethalBots.AI
                 }
                 //SetDestinationToPositionLethalBotAI(ElevatorScript.elevatorInsidePoint.position);
                 //OrderMoveToDestination();
-                if (distanceFromInsidePosition > 1f)
+                if (distanceFromInsidePosition > Const.DISTANCE_CLOSE_ENOUGH_TO_DESTINATION)
                 {
                     SetDestinationToPositionLethalBotAI(ElevatorScript.elevatorInsidePoint.position);
                     OrderMoveToDestination();
@@ -3193,11 +3193,11 @@ namespace LethalBots.AI
                 }
                 return true;
             }
-            if (distanceFromInsidePosition > 1f && IsValidPathToTarget(vector, false))
+            if (distanceFromInsidePosition > Const.DISTANCE_CLOSE_ENOUGH_TO_DESTINATION && IsValidPathToTarget(vector, false))
             {
                 float distanceFromVector = Vector3.Distance(NpcController.Npc.transform.position, vector);
                 if (ElevatorScript.elevatorDoorOpen 
-                    && distanceFromVector <= 1f 
+                    && distanceFromVector <= Const.DISTANCE_CLOSE_ENOUGH_TO_DESTINATION
                     && ElevatorScript.elevatorMovingDown != goUp 
                     && !ElevatorScript.elevatorCalled 
                     && timerElevatorCooldown > Const.TIMER_USE_ELEVATOR
@@ -3209,7 +3209,7 @@ namespace LethalBots.AI
                 }
 
                 // Move closer to the elevator!
-                if (distanceFromVector > 1f)
+                if (distanceFromVector > Const.DISTANCE_CLOSE_ENOUGH_TO_DESTINATION)
                 {
                     SetDestinationToPositionLethalBotAI(vector);
                     OrderMoveToDestination();
