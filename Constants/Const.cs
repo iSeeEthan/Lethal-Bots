@@ -36,7 +36,7 @@ namespace LethalBots.Constants
 
         public const string ADDITIONALNETWORKING_DLLFILENAME = "AdditionalNetworking_Preloader.dll";
 
-        public const float EPSILON = 0.01f;
+        public const float EPSILON = 0.01f; // NOTE: This is different from float.Epsilon!
         public const bool DISABLE_ORIGINAL_GAME_DEBUG_LOGS = false;
         public const ulong LETHAL_BOT_ACTUAL_ID_OFFSET = 200000ul; // Was 100000ul, but changed to not conflict with LethalInternship
 
@@ -64,6 +64,7 @@ namespace LethalBots.Constants
         public const float DISTANCE_ITEMS_TO_ENTRANCE = 6f;
 
         // NEEDTOVAILDATE: Are these correct?
+        // FIXME: Yeah, these IDs are not correct, only the company moon id is correct!
         // I know that the company moon's id is correct!
         public const int EXPERIMENTATION_MOON_ID = 0;
         public const int ASSURANCE_MOON_ID = 1;

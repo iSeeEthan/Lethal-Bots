@@ -1,4 +1,5 @@
-﻿using LethalBots.Enums;
+﻿using LethalBots.Constants;
+using LethalBots.Enums;
 using System;
 using Unity.Netcode;
 
@@ -13,6 +14,28 @@ namespace LethalBots.NetworkSerializers
         public string voiceFolder;
         public float volume;
         public float voicePitch;
+
+        // Constructor with default values
+        public ConfigIdentity()
+        {
+            name = ConfigConst.DEFAULT_BOT_NAME;
+            suitConfigOption = (int)EnumOptionSuitConfig.Random;
+            suitID = 0;
+            voiceFolder = "Mathew_kelly";
+            volume = 0.5f;
+            // voice pitch set after
+        }
+
+        // Constructor with parameters
+        public ConfigIdentity(string name, int suitID, int suitConfigOption, string voiceFolder, float volume, float voicePitch)
+        {
+            this.name = name;
+            this.suitID = suitID;
+            this.suitConfigOption = suitConfigOption;
+            this.voiceFolder = voiceFolder;
+            this.volume = volume;
+            this.voicePitch = voicePitch;
+        }
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
