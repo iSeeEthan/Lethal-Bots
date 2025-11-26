@@ -159,7 +159,7 @@ namespace LethalBots.AI
                 return false;
             }
         }
-        private Dictionary<Component, BridgeTrigger> dictComponentByCollider = null!;
+        private Dictionary<Collider, BridgeTrigger> dictColliderToBridge = null!;
 
         private Coroutine grabObjectCoroutine = null!;
         private Coroutine? spawnAnimationCoroutine = null;
@@ -768,14 +768,16 @@ namespace LethalBots.AI
             if (NpcController.IsTouchingGround)
             {
                 RaycastHit groundRaycastHit = IsTouchingGroundTimedCheck.GetGroundHit(NpcController.Npc.thisPlayerBody.position);
+                //Plugin.LogDebug($"{NpcController.Npc.playerUsername} groundRaycastHit collider and transform {groundRaycastHit.collider}: {groundRaycastHit.collider?.name ?? "NULL"}, {groundRaycastHit.transform}: {groundRaycastHit.transform?.name ?? "NULL"}");
                 Collider? collider = groundRaycastHit.collider;
-                if (collider != null && dictComponentByCollider.TryGetValue(collider.transform, out BridgeTrigger bridgeTrigger))
+                if (collider != null && dictColliderToBridge.TryGetValue(collider, out BridgeTrigger bridgeTrigger))
                 {
                     if (bridgeTrigger != null
                         && bridgeTrigger.fallenBridgeColliders.Length > 0
                         && bridgeTrigger.fallenBridgeColliders[0].enabled)
                     {
-                        Plugin.LogDebug($"{NpcController.Npc.playerUsername} on fallen bridge ! {IsTouchingGroundTimedCheck.GetGroundHit(NpcController.Npc.thisPlayerBody.position).collider.name}");
+                        Plugin.LogDebug($"{NpcController.Npc.playerUsername} on fallen bridge ! {collider.name}");
+                        IsTouchingGroundTimedCheck.ForceRecalculationNextThink(true); // Make sure we actually fall and not teleport ourselves back up!
                         return true;
                     }
                 }
@@ -4518,39 +4520,51 @@ namespace LethalBots.AI
 
         private void InitImportantColliders()
         {
-            if (dictComponentByCollider == null)
+            if (dictColliderToBridge == null)
             {
-                dictComponentByCollider = new Dictionary<Component, BridgeTrigger>();
+                dictColliderToBridge = new Dictionary<Collider, BridgeTrigger>();
             }
             else
             {
-                dictComponentByCollider.Clear();
+                dictColliderToBridge.Clear();
             }
 
             BridgeTrigger[] bridgeTriggers = Object.FindObjectsOfType<BridgeTrigger>(includeInactive: false);
             foreach (var bridge in bridgeTriggers)
             {
-                Component[] bridgePhysicsPartsContainerComponents = bridge.bridgePhysicsPartsContainer.gameObject.GetComponentsInChildren<Transform>();
+                // It was the animator that held the bridge colliders, not the physics parts container
+                Collider[] bridgePhysicsPartsContainerComponents = bridge.bridgeAnimator.gameObject.GetComponentsInChildren<Collider>();
                 foreach (var component in bridgePhysicsPartsContainerComponents)
                 {
-                    if (component.name == "Mesh")
-                    {
-                        continue;
-                    }
+                    //if (component.name == "Mesh")
+                    //{
+                    //    continue;
+                    //}
 
-                    if (!dictComponentByCollider.ContainsKey(component))
+                    if (!dictColliderToBridge.ContainsKey(component))
                     {
-                        dictComponentByCollider.Add(component, bridge);
+                        dictColliderToBridge.Add(component, bridge);
                     }
                 }
             }
 
-            foreach (var a in dictComponentByCollider)
-            {
-                Plugin.LogDebug($"dictComponentByCollider {a.Key} {a.Value}");
-                ComponentUtil.ListAllComponents(((BridgeTrigger)a.Value).bridgePhysicsPartsContainer.gameObject);
-                ComponentUtil.ListAllColliders(((BridgeTrigger)a.Value).bridgePhysicsPartsContainer.gameObject);
-            }
+            // This function was a Godsend when debugging issues with fallen bridges and colliders
+            //foreach (var a in dictColliderToBridge)
+            //{
+            //    Plugin.LogDebug($"dictComponentByCollider {a.Key} {a.Value}");
+            //    //ComponentUtil.ListAllComponents(a.Value.gameObject);
+            //    //ComponentUtil.ListAllComponents(a.Value.bridgePhysicsPartsContainer.gameObject);
+            //    //ComponentUtil.ListAllColliders(a.Value.gameObject);
+            //    //ComponentUtil.ListAllColliders(a.Key.gameObject);
+            //    ComponentUtil.ListAllColliders(a.Value.bridgeAnimator.gameObject);
+            //    ComponentUtil.ListAllColliders(a.Value.bridgePhysicsPartsContainer.gameObject);
+
+            //    Plugin.LogDebug($"Fallen bridge colliders for bridge {a.Value}:");
+            //    foreach (var b in a.Value.fallenBridgeColliders)
+            //    {
+            //        Plugin.LogDebug($"fallenBridgeColliders {b}");
+            //    }
+            //}
         }
 
         public void HideShowModelReplacement(bool show)
@@ -8180,7 +8194,16 @@ namespace LethalBots.AI
 			return groundHit;
 		}
 
-		private bool NeedToRecalculate()
+        public void ForceRecalculationNextThink(bool invalidateIsTouchingGround = false)
+        {
+            if (invalidateIsTouchingGround)
+            {
+                isTouchingGround = false;
+            }
+            lastTimeCalculate = 0;
+        }
+
+        private bool NeedToRecalculate()
 		{
 			long elapsedTime = DateTime.Now.Ticks - lastTimeCalculate;
 			if (elapsedTime > timer)
@@ -8188,12 +8211,6 @@ namespace LethalBots.AI
 				lastTimeCalculate = DateTime.Now.Ticks;
 				return true;
 			}
-            // BUGBUG: We always recalulate if we are not on the ground.
-            // We have issues if we don't and could fall out of the map!
-            else if (!isTouchingGround)
-            {
-                return true;
-            }
             else
             {
                 return false;

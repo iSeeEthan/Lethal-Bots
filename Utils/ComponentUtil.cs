@@ -34,8 +34,24 @@ namespace LethalBots.Utils
             }
 
             Plugin.LogDebug(" ");
-            Plugin.LogDebug(" List of Colliders :");
-            Component[] components = gameObject.GetComponentsInChildren(typeof(Collider));
+            Plugin.LogDebug("List of Colliders: ");
+            Component[] components = gameObject.GetComponents(typeof(Collider));
+            foreach (Component component in components)
+            {
+                if (component == null) continue;
+                Plugin.LogDebug(component.ToString());
+            }
+
+            Plugin.LogDebug("Child Colliders: ");
+            components = gameObject.GetComponentsInChildren(typeof(Collider));
+            foreach (Component component in components)
+            {
+                if (component == null) continue;
+                Plugin.LogDebug(component.ToString());
+            }
+
+            Plugin.LogDebug("Parent Colliders: ");
+            components = gameObject.GetComponentsInParent(typeof(Collider));
             foreach (Component component in components)
             {
                 if (component == null) continue;
