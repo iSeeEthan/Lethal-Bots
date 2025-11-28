@@ -326,7 +326,7 @@ namespace LethalBots.AI.AIStates
 
         /// <remarks>
         /// We give the ship position we want a safe path to!<br/>
-        /// We return null if we are not outside!
+        /// We return our target entrance position if we are not outside!
         /// </remarks>
         /// <inheritdoc cref="AIState.GetDesiredSafePathPosition"></inheritdoc>
         protected override Vector3? GetDesiredSafePathPosition()

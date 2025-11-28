@@ -37,6 +37,7 @@ using System.Text;
 using Unity.Netcode;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using VoiceCommandsAPI.API;
 
 namespace LethalBots
 {
@@ -48,6 +49,7 @@ namespace LethalBots
     [BepInDependency(LethalLib.Plugin.ModGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(Const.CSYNC_GUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(LethalCompanyInputUtils.PluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(VoiceCommandsAPI.MyPluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
     // SoftDependencies
     [BepInDependency(Const.REVIVECOMPANY_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(Const.BUNKBEDREVIVE_GUID, BepInDependency.DependencyFlags.SoftDependency)]
