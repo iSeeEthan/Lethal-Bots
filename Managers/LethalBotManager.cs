@@ -1330,30 +1330,34 @@ namespace LethalBots.Managers
             PlayerControllerB playerWhoSentMessage = playersManager.allPlayerScripts[playerId];
             foreach (LethalBotAI lethalBotAI in AllLethalBotAIs)
             {
+                PlayerControllerB? botController = lethalBotAI?.NpcController?.Npc;
                 if (lethalBotAI == null
-                    || !lethalBotAI.NpcController.Npc.isPlayerControlled
+                    || botController == null
+                    || !botController.isPlayerControlled
                     || lethalBotAI.State == null)
                 {
                     continue;
                 }
 
                 // Don't allow dead players to chat with the living!
-                if (lethalBotAI.NpcController.Npc.isPlayerDead != playerWhoSentMessage.isPlayerDead)
+                if (botController.isPlayerDead != playerWhoSentMessage.isPlayerDead)
                 {
                     continue;
                 }
 
                 // We don't care about our own messages!
-                if (lethalBotAI.NpcController.Npc == playerWhoSentMessage)
+                if (botController == playerWhoSentMessage)
                 {
                     continue;
                 }
 
-                bool flag = lethalBotAI.NpcController.Npc.holdingWalkieTalkie && playerWhoSentMessage.holdingWalkieTalkie;
-                if (flag || (lethalBotAI.NpcController.Npc.transform.position - playerWhoSentMessage.transform.position).sqrMagnitude <= Const.MAX_CHAT_RANGE * Const.MAX_CHAT_RANGE)
+                bool flag = botController.holdingWalkieTalkie && playerWhoSentMessage.holdingWalkieTalkie;
+                if (flag || (botController.transform.position - playerWhoSentMessage.transform.position).sqrMagnitude <= Const.MAX_CHAT_RANGE * Const.MAX_CHAT_RANGE)
                 {
-                    Plugin.LogDebug($"Bot {lethalBotAI.NpcController.Npc.playerUsername} saw message {message} from {playerWhoSentMessage.playerUsername}!");
-                    Plugin.LogDebug($"Bot { (flag ? "does" : "doesn't") } have a walkie-talkie!");
+                    Plugin.LogDebug($"Bot {botController.playerUsername} saw message {message} from {playerWhoSentMessage.playerUsername}!");
+                    //Plugin.LogDebug($"Bot {(botController.holdingWalkieTalkie ? "does" : "doesn't")} have a walkie-talkie!");
+                    //Plugin.LogDebug($"Player who sent message {(playerWhoSentMessage.holdingWalkieTalkie ? "does" : "doesn't")} have a walkie-talkie!");
+                    //Plugin.LogDebug($"Ignoring range: {flag}");
                     lethalBotAI.State.OnPlayerChatMessageReceived(message, playerWhoSentMessage);
                 }
             }
@@ -1375,33 +1379,37 @@ namespace LethalBots.Managers
 
             foreach (LethalBotAI lethalBotAI in AllLethalBotAIs)
             {
+                PlayerControllerB? botController = lethalBotAI?.NpcController?.Npc;
                 if (lethalBotAI == null 
-                    || !lethalBotAI.NpcController.Npc.isPlayerControlled
+                    || botController == null
+                    || !botController.isPlayerControlled
                     || lethalBotAI.State == null)
                 {
                     continue;
                 }
 
                 // Don't allow dead players to chat with the living!
-                if (lethalBotAI.NpcController.Npc.isPlayerDead != playerWhoSaidMessage.isPlayerDead)
+                if (botController.isPlayerDead != playerWhoSaidMessage.isPlayerDead)
                 {
                     continue;
                 }
 
                 // We don't care about our own messages!
                 // Although, I don't think this can ever happen though....
-                if (lethalBotAI.NpcController.Npc == playerWhoSaidMessage)
+                if (botController == playerWhoSaidMessage)
                 {
                     continue;
                 }
 
                 // Just like text chat, there is a limited range, although, I need to find the actual voice range.
                 // Until then, its the same as using text chat!
-                bool flag = lethalBotAI.NpcController.Npc.holdingWalkieTalkie && playerWhoSaidMessage.speakingToWalkieTalkie; // We have to check if the player is speakingToWalkieTalkie not holdingWalkieTalkie
-                if (flag || (lethalBotAI.NpcController.Npc.transform.position - playerWhoSaidMessage.transform.position).sqrMagnitude <= Const.MAX_CHAT_RANGE * Const.MAX_CHAT_RANGE)
+                bool flag = botController.holdingWalkieTalkie && playerWhoSaidMessage.speakingToWalkieTalkie; // We have to check if the player is speakingToWalkieTalkie not holdingWalkieTalkie
+                if (flag || (botController.transform.position - playerWhoSaidMessage.transform.position).sqrMagnitude <= Const.MAX_CHAT_RANGE * Const.MAX_CHAT_RANGE)
                 {
-                    Plugin.LogDebug($"Bot {lethalBotAI.NpcController.Npc.playerUsername} heard message {message} from {playerWhoSaidMessage.playerUsername}!");
-                    Plugin.LogDebug($"Bot {(flag ? "does" : "doesn't")} have a walkie-talkie!");
+                    Plugin.LogDebug($"Bot {botController.playerUsername} heard message {message} from {playerWhoSaidMessage.playerUsername}!");
+                    //Plugin.LogDebug($"Bot {(botController.holdingWalkieTalkie ? "does" : "doesn't")} have a walkie-talkie!");
+                    //Plugin.LogDebug($"Player who said message {(playerWhoSaidMessage.holdingWalkieTalkie ? "does" : "doesn't")} have a walkie-talkie!");
+                    //Plugin.LogDebug($"Ignoring range: {flag}");
                     lethalBotAI.State.OnPlayerChatMessageReceived(message, playerWhoSaidMessage);
                 }
             }
