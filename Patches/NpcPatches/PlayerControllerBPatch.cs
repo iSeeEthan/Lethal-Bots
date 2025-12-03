@@ -730,6 +730,8 @@ namespace LethalBots.Patches.NpcPatches
             if (lethalBotAI != null)
             {
                 StartOfRound.Instance.playerTeleportedEvent.Invoke(__instance);
+                lethalBotAI.NpcController.TeleportingThisFrame = true;
+                __instance.teleportedLastFrame = true;
                 lethalBotAI.TeleportLethalBot(pos, withRotation: withRotation, rot: rot, allowInteractTrigger: allowInteractTrigger);
                 return false;
             }
