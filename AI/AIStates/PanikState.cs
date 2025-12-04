@@ -222,6 +222,15 @@ namespace LethalBots.AI.AIStates
                 npcController.OrderToLookAtPosition(this.currentEnemy.eye.position);
                 npcController.SetTurnBodyTowardsDirectionWithPosition(this.currentEnemy.eye.position);
             }
+            // Ok, there are three state indexes for nutcrackers to date!
+            // 0. Patroling
+            // 1. Scanning
+            // 2. Hunting/Attacking
+            else if (this.currentEnemy is NutcrackerEnemyAI && this.currentEnemy.currentBehaviourStateIndex == 1)
+            {
+                ai.StopMoving(); // Stand still, if we move, the nutcracker will see us!
+                return;
+            }
 
             // If we are nearby an entrance we should flee out of it!
             if (findEntranceTimer > Const.FLEEING_UPDATE_ENTRANCE)

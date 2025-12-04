@@ -409,7 +409,6 @@ namespace LethalBots.Managers
             RegisterThreat("Crawler", 20f, 10f, 20f);
             RegisterThreat("ForestGiant", 30f, 10f, 40f);
             RegisterThreat("Earth Leviathan", 10f, null, 15f);
-            RegisterThreat("Nutcracker", 15f, 10f, 15f);
             RegisterThreat("ImmortalSnail", 10f, null, 10f);
             RegisterThreat("Clay Surgeon", 15f, null, 10f);
             RegisterThreat("Flowerman", 10f, null, 5f);
@@ -501,6 +500,46 @@ namespace LethalBots.Managers
                 fq => fq.EnemyAI.currentBehaviourStateIndex == 2 ? 20f : null, // Sigh, i may or may not of added this after a particular experience where bots got stuck in a loop of running away and coming back despite the spider not actually chasing them!
                 fq => fq.EnemyAI.currentBehaviourStateIndex == 2 ? 10f : null, 
                 _ => 20f // Always 20 for pathfinding
+            );
+
+            // Register threat is compatable with functions!
+            // This makes it really easy to add advanced logic for when the bot should be afraid!
+            float? NutcrackerPanikFunc(LethalBotFearQuery fearQuery)
+            {
+                // Ok, there are three state indexes to date!
+                // 0. Patroling
+                // 1. Scanning
+                // 2. Hunting/Attacking
+                int stateIndex = fearQuery.EnemyAI.currentBehaviourStateIndex;
+                if (stateIndex == 1 
+                    || (stateIndex == 2 && fearQuery.EnemyAI is NutcrackerEnemyAI nutcracker && fearQuery.Bot is LethalBotAI lethalBotAI && nutcracker.lastPlayerSeenMoving == (int)lethalBotAI.NpcController.Npc.playerClientId))
+                {
+                    return 60f; // Got from the Nutcracker source code, 60f is the maximum range it can see moving players!
+                }
+                else if (stateIndex == 2)
+                {
+                    return 30f; // Also got from Nutcracker source code. The maximum vision range is, 25f, for moving players when chasing someone else or its 60f for the player being chased!
+                }
+                return 15f; // Let's make sure not to walk into them, of course!
+            }
+
+            float? NutcrackerMissionFunc(LethalBotFearQuery fearQuery)
+            {
+                // TODO: Add a check for if the player is holding a weapon, they may be attempting to fight it,
+                // and teleporting them is not a good idea!
+                //int stateIndex = fearQuery.EnemyAI.currentBehaviourStateIndex;
+                //if (stateIndex == 1
+                //    || (stateIndex == 2 && fearQuery.EnemyAI is NutcrackerEnemyAI nutcracker && fearQuery.PlayerToCheck is PlayerControllerB playerToCheck && nutcracker.lastPlayerSeenMoving == (int)playerToCheck.playerClientId))
+                //{
+                //    return stateIndex == 2 ? 30f : 10f; // We care about the player being chased, not any bystanders!
+                //}
+                return 10f;
+            }
+
+            RegisterThreat("Nutcracker",
+                NutcrackerPanikFunc,
+                NutcrackerMissionFunc,
+                NutcrackerPanikFunc // Just use panik func, better for not triggering them in the first place!
             );
 
             // TODO: Improve this as I study the AI!
