@@ -5611,6 +5611,7 @@ namespace LethalBots.AI
             lethalBotController.playerBodyAnimator.SetBool(Const.PLAYER_ANIMATION_BOOL_GRABVALIDATED, false);
             lethalBotController.playerBodyAnimator.SetBool(Const.PLAYER_ANIMATION_BOOL_CANCELHOLDING, false);
             lethalBotController.playerBodyAnimator.ResetTrigger(Const.PLAYER_ANIMATION_TRIGGER_THROW);
+            lethalBotController.isGrabbingObjectAnimation = true;
             this.SetSpecialGrabAnimationBool(true, grabbableObject);
 
             if (this.grabObjectCoroutine != null)
@@ -5781,6 +5782,11 @@ namespace LethalBots.AI
                 float grabAnimationTime = this.HeldItem.itemProperties.grabAnimationTime > 0f ? this.HeldItem.itemProperties.grabAnimationTime : 0.4f;
                 yield return new WaitForSeconds(grabAnimationTime - 0.2f);
                 NpcController.Npc.playerBodyAnimator.SetBool(Const.PLAYER_ANIMATION_BOOL_GRABVALIDATED, true);
+                NpcController.Npc.isGrabbingObjectAnimation = false;
+            }
+            else
+            {
+                NpcController.Npc.playerBodyAnimator.SetBool(Const.PLAYER_ANIMATION_BOOL_GRABINVALIDATED, true);
                 NpcController.Npc.isGrabbingObjectAnimation = false;
             }
             yield break;
