@@ -79,7 +79,7 @@ namespace LethalBots.AI.AIStates
                     if (this.currentEnemy is JesterAI && (Time.timeSinceLevelLoad - lastDeclaredJesterTimer) > 30f)
                     {
                         lastDeclaredJesterTimer = Time.timeSinceLevelLoad;
-                        HUDManagerPatch.AddPlayerChatMessageServerRpc_ReversePatch(HUDManager.Instance, "JESTER!!! RUN!!!", (int)npcController.Npc.playerClientId);
+                        ai.SendChatMessage("JESTER!!! RUN!!!");
                     }
                 }
                 else
@@ -123,7 +123,7 @@ namespace LethalBots.AI.AIStates
                     if (this.currentEnemy is JesterAI && (Time.timeSinceLevelLoad - lastDeclaredJesterTimer) > 30f)
                     {
                         lastDeclaredJesterTimer = Time.timeSinceLevelLoad;
-                        HUDManagerPatch.AddPlayerChatMessageServerRpc_ReversePatch(HUDManager.Instance, "JESTER!!! RUN!!!", (int)npcController.Npc.playerClientId);
+                        ai.SendChatMessage("JESTER!!! RUN!!!");
                     }
                 }
                 // else no fear range, ignore this enemy, already ignored by CheckLOSForEnemy but hey better be safe
@@ -416,7 +416,7 @@ namespace LethalBots.AI.AIStates
                     if ((Time.timeSinceLevelLoad - lastDeclaredJesterTimer) > 30f)
                     {
                         lastDeclaredJesterTimer = Time.timeSinceLevelLoad;
-                        HUDManagerPatch.AddPlayerChatMessageServerRpc_ReversePatch(HUDManager.Instance, "JESTER!!! RUN!!!", (int)npcController.Npc.playerClientId);
+                        ai.SendChatMessage("JESTER!!! RUN!!!");
                     }
                 }
                 return;

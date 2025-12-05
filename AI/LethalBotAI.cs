@@ -12,6 +12,7 @@ using LethalBots.Patches.EnemiesPatches;
 using LethalBots.Patches.MapPatches;
 using LethalBots.Patches.ModPatches.ModelRplcmntAPI;
 using LethalBots.Patches.NpcPatches;
+using LethalBots.Patches.GameEnginePatches;
 using LethalBots.Utils;
 using LethalInternship.AI;
 using LethalLib.Modules;
@@ -6527,6 +6528,20 @@ namespace LethalBots.AI
             float num = (float)charge / 100f;
             grabbableObject.insertedBattery = new Battery(num <= 0f, num);
             grabbableObject.ChargeBatteries();
+        }
+
+        #endregion
+
+        #region Bot Chat
+
+        /// <summary>
+        /// Helper function for sending chat messages to all players!
+        /// </summary>
+        /// <param name="message"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SendChatMessage(string message)
+        {
+            HUDManagerPatch.AddPlayerChatMessageServerRpc_ReversePatch(HUDManager.Instance, message, (int)NpcController.Npc.playerClientId);
         }
 
         #endregion
