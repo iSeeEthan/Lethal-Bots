@@ -51,9 +51,10 @@ namespace LethalBots.AI.AIStates
         {
             // It doesn't matter if we had started the state before,
             // we should always recheck the nearest entrance
-            EntranceTeleport? entranceToAvoid = waitForSafePathTimer > Const.WAIT_TIME_FOR_SAFE_PATH ? this.targetEntrance : null;
+            EntranceTeleport? previousEntrance = this.targetEntrance;
+            EntranceTeleport? entranceToAvoid = waitForSafePathTimer > Const.WAIT_TIME_FOR_SAFE_PATH ? previousEntrance : null;
             targetEntrance = FindClosestEntrance(entranceToAvoid: entranceToAvoid);
-            entranceAttempts = 0;
+            entranceAttempts = targetEntrance == previousEntrance ? entranceAttempts : 0;
             base.OnEnterState();
         }
 

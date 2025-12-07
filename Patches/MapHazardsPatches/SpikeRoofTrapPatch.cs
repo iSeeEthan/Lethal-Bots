@@ -31,5 +31,44 @@ namespace LethalBots.Patches.MapHazardsPatches
                 return;
             }
         }
+
+        // A function we use to find that dang TerminalAccessibleObject
+        [HarmonyPatch("Start")]
+        [HarmonyPostfix]
+        static void Start_PostFix(SpikeRoofTrap __instance)
+        {
+            // Ok, so I already know that GetComponent, GetComponentInChildren, and GetComponentInParent on the trap itself doesnt work, could it be on the animator or something?
+            // LIST OF FIELDS TESTED:
+            // Instance: FAILED
+            // spikeTrapAnimator: FAILED
+            // laserEye: 
+            HUDManager.Instance?.DisplayTip("Spike Roof Trap Spawned", "Check the logs!!!!!!");
+            TerminalAccessibleObject terminalAccessibleObject = __instance.laserEye.GetComponent<TerminalAccessibleObject>();
+            if (terminalAccessibleObject == null)
+            {
+                terminalAccessibleObject = __instance.laserEye.GetComponentInParent<TerminalAccessibleObject>();
+                if (terminalAccessibleObject == null)
+                {
+                    terminalAccessibleObject = __instance.laserEye.GetComponentInChildren<TerminalAccessibleObject>();
+                    if (terminalAccessibleObject == null)
+                    {
+                        Plugin.LogDebug("Failed to find TerminalAccessibleObject in SpikeRoofTrap! :(");
+                        return;
+                    }
+                    else
+                    {
+                        Plugin.LogDebug("SpikeRoofTrap had TerminalAccessibleObject in animator under GetComponentInChildren.");
+                    }
+                }
+                else
+                {
+                    Plugin.LogDebug("SpikeRoofTrap had TerminalAccessibleObject in animator under GetComponentInParent.");
+                }
+            }
+            else
+            {
+                Plugin.LogDebug("SpikeRoofTrap had TerminalAccessibleObject in animator under GetComponent.");
+            }
+        }
     }
 }
