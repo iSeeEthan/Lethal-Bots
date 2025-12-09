@@ -28,6 +28,7 @@ namespace LethalBots.AI.AIStates
         public SearchingForScrapState(AIState oldState, EntranceTeleport? entranceToAvoid = null) : base(oldState)
         {
             CurrentState = EnumAIStates.SearchingForScrap;
+            entranceAttempts = 0;
             if (entranceToAvoid != null)
             {
                 // If we are avoiding an entrance, we should set it as the target entrance
@@ -39,6 +40,7 @@ namespace LethalBots.AI.AIStates
         public SearchingForScrapState(LethalBotAI ai, EntranceTeleport? entranceToAvoid = null) : base(ai)
         {
             CurrentState = EnumAIStates.SearchingForScrap;
+            entranceAttempts = 0;
             if (entranceToAvoid != null)
             {
                 // If we are avoiding an entrance, we should set it as the target entrance
