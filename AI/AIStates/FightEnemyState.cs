@@ -168,6 +168,7 @@ namespace LethalBots.AI.AIStates
             float sqrMagDistanceEnemy = (this.currentEnemy.transform.position - npcController.Npc.transform.position).sqrMagnitude;
             float maxEnemyDistance = GetAttackRangeForWeapon(ai.HeldItem) + enemySize;
             float fallBackDistance = maxEnemyDistance * 0.75f;
+            float giveupRange = fearRange.Value * 2;
             Vector3 targetPos = EnemyCollision != null ? EnemyCollision.bounds.center : this.currentEnemy.eye.position;
             if (sqrMagDistanceEnemy < maxEnemyDistance * maxEnemyDistance && !Physics.Linecast(npcController.Npc.gameplayCamera.transform.position, targetPos, StartOfRound.Instance.collidersAndRoomMaskAndDefault))
             {
@@ -192,7 +193,7 @@ namespace LethalBots.AI.AIStates
                 }
             }
             // Enemy is outside our retreat range, abort!
-            else if (sqrMagDistanceEnemy > (fearRange * 2) * (fearRange * 2) 
+            else if (sqrMagDistanceEnemy > giveupRange * giveupRange
                 || !ai.IsValidPathToTarget(currentEnemy.transform.position))
             {
                 ChangeBackToPreviousState();
