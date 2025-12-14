@@ -1172,7 +1172,7 @@ namespace LethalBots.Managers
         /// This mimics the normal player kick process.
         /// </summary>
         /// <param name="lethalBotAI">The lethal bot being kicked</param>
-        public void HandleLethalBotKicked(LethalBotAI lethalBotAI)
+        private void HandleLethalBotKicked(LethalBotAI lethalBotAI)
         {
             PlayerControllerB? lethalBotController = lethalBotAI.NpcController?.Npc;
             if (lethalBotController != null)
