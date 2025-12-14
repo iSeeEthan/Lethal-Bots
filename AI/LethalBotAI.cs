@@ -689,6 +689,8 @@ namespace LethalBots.AI
             State.DoAI();
 
             // Doors
+            // TODO: I should probably just override the door code,
+            // which would be more optimized than this.
             OpenDoorIfNeeded();
 
             // Ladders
