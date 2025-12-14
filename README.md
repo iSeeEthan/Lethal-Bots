@@ -1,6 +1,8 @@
 # Lethal-Bots
 A Lethal Company Mod that adds bot players to the game. Based off of the code of the mod Lethal Internship.<br/>
-Everyone must have the mod in order for it to work!
+Everyone must have the mod in order for it to work!<br/>
+
+You can download the mod here: https://thunderstore.io/c/lethal-company/p/TRizzle/LethalBots/
 
 ## Preramble:<br/>
 
