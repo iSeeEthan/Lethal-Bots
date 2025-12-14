@@ -614,6 +614,9 @@ namespace LethalBots.AI
             }
 
             // No AI when falling
+            // NEEDTOVALIDATE: I wonder that since bots now properly set their moveInputVector, if this is no longer needed.
+            // Lethal Internship used to set it to Vector2(1.0, 0.0) I believe. I changed it to use the direction of the path the bot was following,
+            // which fixed the movement animations.
             if (StateControllerMovement == EnumStateControllerMovement.Free)
             {
                 return;
