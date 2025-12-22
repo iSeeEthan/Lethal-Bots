@@ -123,7 +123,7 @@ namespace LethalBots.AI
         public int MaxHealth = 100;
         public float TimeSinceTeleporting = 0f;
 
-        public List<IBodyReplacementBase> ListModelReplacement = null!;
+        public List<IBodyReplacementBase> ListModelReplacement { private set; get; } = null!;
 
         public TimedTouchingGroundCheck IsTouchingGroundTimedCheck = null!;
         public TimedAngleFOVWithLocalPlayerCheck AngleFOVWithLocalPlayerTimedCheck = null!;
@@ -269,6 +269,9 @@ namespace LethalBots.AI
 
             // Important colliders
             InitImportantColliders();
+
+            // Model replacements
+            ListModelReplacement = new List<IBodyReplacementBase>();
 
             // Grabbableobject
             LethalBotManager.Instance.RegisterItems();
