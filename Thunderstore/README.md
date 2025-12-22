@@ -67,7 +67,6 @@ Chilling with you, following, founding loot, panicking, you name it, there's a v
 You may know him as **Dragon-V0942** from [FurAffinity](https://www.furaffinity.net/user/dragon-v0942), and you can find some of his voice acting works on youtube [(Voice acting example)](https://www.youtube.com/watch?v=5LGVz-ONeKE).
 </br>
 </br>
-Some AI voices should be added next update (0.20.0)
 
 ## Have fun with cosmetic mods !
 This mod is compatible with ModelReplacementAPI and all of its users (tooManySuits, MoreSuits, ThiccCompany, etc...).
