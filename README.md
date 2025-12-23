@@ -4,6 +4,8 @@ Everyone must have the mod in order for it to work!<br/>
 
 You can download the mod here: https://thunderstore.io/c/lethal-company/p/TRizzle/LethalBots/
 
+I also have a discord server as well for any questions or support: https://discord.gg/TVqJst8yHf
+
 ## Preramble:<br/>
 
 Playing solo in Lethal Company is hard, as the game is inherently designed around a team of 4 players.<br/><br/>
