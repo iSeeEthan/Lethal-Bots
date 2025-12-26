@@ -259,7 +259,9 @@ namespace LethalBots.AI
         /// <param name="isVoice">Was the message spoken or was typed out in the chat?</param>
         public virtual void OnPlayerChatMessageReceived(string message, PlayerControllerB playerWhoSentMessage, bool isVoice) 
         {
-            if (message.Contains("jester"))
+            BotIntent intent = Plugin.DetectIntent(message);
+
+            if (intent == BotIntent.Jester)
             {
                 if (ai.isOutside)
                 {
@@ -275,7 +277,7 @@ namespace LethalBots.AI
             // One of us was asked to be the mission controller!
             // NOTE: playerWhoSentMessage should never be null here, but other modders could call this function directly with a null value!
             // FIXME: This is REALLY bad with many bots since they all call this function. We need a better way to do this!
-            else if (playerWhoSentMessage != null && message.Contains("man the ship"))
+            else if (playerWhoSentMessage != null && intent == BotIntent.StayOnShip)
             {
                 // FIXME: There has to be a better way to do this!
                 // Get the a trace of where the player who sent the message is looking at!
@@ -315,6 +317,65 @@ namespace LethalBots.AI
                     break;
                 }
                 return;
+            }
+            else if (intent == BotIntent.GoToShip)
+            {
+                ai.State = new ReturnToShipState(this);
+            }
+            else if (intent == BotIntent.FollowMe)
+            {
+                if (ai.IsInSpecialAnimation())
+                {
+                    return;
+                }
+
+                if (playerWhoSentMessage != null)
+                {
+                    ai.SyncAssignTargetAndSetMovingTo(playerWhoSentMessage);
+
+                    if (Plugin.Config.ChangeSuitAutoBehaviour.Value)
+                    {
+                        ai.ChangeSuitLethalBotServerRpc(ai.NpcController.Npc.playerClientId, playerWhoSentMessage.currentSuitID);
+                    }
+                }
+            }
+            else if (intent == BotIntent.Explore)
+            {
+                if (ai.IsInSpecialAnimation())
+                {
+                    return;
+                }
+
+                ai.State = new SearchingForScrapState(this);
+                ai.targetPlayer = null; // Clear target player since we are not following them anymore
+            }
+            else if (intent == BotIntent.DropItem)
+            {
+                if (ai.IsInSpecialAnimation())
+                {
+                    return;
+                }
+
+                if (!ai.AreHandsFree())
+                {
+                    ai.DropItem();
+                }
+                else if (ai.HasSomethingInInventory())
+                {
+                    ai.DropAllHeldItems();
+                }
+            }
+            else if (intent == BotIntent.ChangeSuit)
+            {
+                if (ai.IsInSpecialAnimation())
+                {
+                    return;
+                }
+
+                if (playerWhoSentMessage != null)
+                {
+                    ai.ChangeSuitLethalBotServerRpc(ai.NpcController.Npc.playerClientId, playerWhoSentMessage.currentSuitID);
+                }
             }
         }
 
